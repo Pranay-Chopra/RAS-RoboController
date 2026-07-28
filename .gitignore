@@ -1,0 +1,5 @@
+.buildozer
+.venv
+__pycache__
+.android_venv
+bin

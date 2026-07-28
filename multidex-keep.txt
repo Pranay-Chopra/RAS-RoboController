@@ -1,0 +1,2 @@
+org/kivy/android/GattCallback.class
+org.kivy.android.GattCallback
