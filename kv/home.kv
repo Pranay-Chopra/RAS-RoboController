@@ -1,72 +1,205 @@
-<HomeScreen>
+<HomeScreen>:
 
-    MDBoxLayout:
-        orientation: "vertical"
-        md_bg_color: "#0D0D0D"
+    MDNavigationLayout:
 
-        MDTopAppBar:
-            type: "small"
-            headline_text: "ESP32 Controller"
+        # Main Screen Content Container
+        MDScreenManager:
+
+            MDScreen:
+
+                MDBoxLayout:
+                    orientation: "vertical"
+                    md_bg_color: "#0D0D0D"
+
+                    MDTopAppBar:
+                        type: "small"
+                        headline_text: "ESP32 Controller"
+                        md_bg_color: "#0D0D0D"
+                        specific_text_color: "#D4AF37"
+
+                        # Navigation Drawer Toggle (Hamburger Menu)
+                        MDTopAppBarLeadingButtonContainer:
+
+                            MDActionTopAppBarButton:
+                                icon: "menu"
+                                theme_icon_color: "Custom"
+                                icon_color: "#D4AF37"
+                                on_release: nav_drawer.set_state("toggle")
+
+                    MDBoxLayout:
+                        orientation: "vertical"
+                        spacing: "20dp"
+                        padding: "25dp"
+
+                        # Connection Status Card
+                        MDCard:
+                            style: "filled"
+                            md_bg_color: "#161616"
+                            radius: [20]
+                            padding: "20dp"
+                            size_hint_y: None
+                            height: "230dp"
+                            orientation: "vertical"
+                            spacing: "15dp"
+
+                            # Status Icon
+                            MDIcon:
+                                icon: root.status_icon
+                                theme_icon_color: "Custom"
+                                icon_color: "#2ecc71" if root.connected else ("#f39c12" if root.scanning else "#e74c3c")
+                                halign: "center"
+                                font_size: "64sp"
+
+                            # Connection State Label
+                            MDLabel:
+                                text: root.connection_status
+                                halign: "center"
+                                font_style: "Headline"
+                                role: "small"
+                                theme_text_color: "Custom"
+                                text_color: "#FFFFFF" if root.connected else "#888888"
+
+                            # Action Button (Swaps between Scan / Disconnect / Scanning state)
+                            MDButton:
+                                style: "filled"
+                                pos_hint: {"center_x": .5}
+                                md_bg_color: "#e74c3c" if root.connected else "#D4AF37"
+                                disabled: root.scanning
+                                on_release:
+                                    root.disconnect() if root.connected else root.scan()
+
+                                MDButtonText:
+                                    text: "Disconnect" if root.connected else ("Scanning..." if root.scanning else "Scan for Devices")
+                                    theme_text_color: "Custom"
+                                    text_color: "#FFFFFF" if root.scanning else "#000000"
+
+                        # Scanned Devices Section (Scrollable Container)
+                        MDScrollView:
+                            do_scroll_x: False
+                            do_scroll_y: True
+
+                            MDList:
+                                id: robot_container
+                                spacing: "10dp"
+                                size_hint_y: None
+                                height: self.minimum_height
+
+
+        # Side Navigation Drawer
+        MDNavigationDrawer:
+            id: nav_drawer
+            radius: (0, 16, 16, 0)
             md_bg_color: "#0D0D0D"
-            specific_text_color: "#D4AF37"
 
-        MDBoxLayout:
-            orientation: "vertical"
-            spacing: "20dp"
-            padding: "25dp"
+            MDNavigationDrawerMenu:
 
-            # Connection Status Card
-            MDCard:
-                style: "filled"
-                md_bg_color: "#161616"
-                radius: [20]
-                padding: "20dp"
-                size_hint_y: None
-                height: "230dp"
-                orientation: "vertical"
-                spacing: "15dp"
+                # Header Title
+                MDNavigationDrawerHeader:
+                    title: "Navigation"
+                    title_color: "#D4AF37"
+                    spacing: "4dp"
+                    padding: "12dp", "0dp", "0dp", "8dp"
 
-                # Status Icon
-                MDIcon:
-                    icon: root.status_icon
-                    theme_icon_color: "Custom"
-                    icon_color: "#2ecc71" if root.connected else ("#f39c12" if root.scanning else "#e74c3c")
-                    halign: "center"
-                    font_size: "64sp"
-
-                # Connection State Label
-                MDLabel:
-                    text: root.connection_status
-                    halign: "center"
-                    font_style: "Headline"
-                    role: "small"
-                    theme_text_color: "Custom"
-                    text_color: "#FFFFFF" if root.connected else "#888888"
-
-                # Action Button (Swaps between Scan / Disconnect / Scanning state)
-                MDButton:
-                    style: "filled"
-                    pos_hint: {"center_x": .5}
-                    md_bg_color: "#e74c3c" if root.connected else "#D4AF37"
-                    disabled: root.scanning
+                MDNavigationDrawerItem:
+                    active: True
+                    active_indicator_color: (0.83, 0.68, 0.21, 0.15)
+                    inactive_indicator_color: (0.83, 0.68, 0.21, 0.15)
+                    focus_color: (0.83, 0.68, 0.21, 0.15)
+                    ripple_color: (0.83, 0.68, 0.21, 0.15)
                     on_release:
-                        root.disconnect() if root.connected else root.scan()
+                        nav_drawer.set_state("close")
 
-                    MDButtonText:
-                        text: "Disconnect" if root.connected else ("Scanning..." if root.scanning else "Scan for Devices")
+                    MDIcon:
+                        icon: "home"
+                        theme_icon_color: "Custom"
+                        icon_color: "#D4AF37"
+                        pos_hint: {"center_y": .5}
+
+                    MDNavigationDrawerItemText:
+                        text: "Home"
                         theme_text_color: "Custom"
-                        text_color: "#FFFFFF" if root.connected else "#000000"
+                        text_color: "#FFFFFF"
 
-            # Scanned Devices Section (Scrollable Container)
-            # Scanned Devices Section (Scrollable Container)
-            MDScrollView:
-                do_scroll_x: False
-                do_scroll_y: True
+                MDNavigationDrawerItem:
+                    active: False
+                    active_indicator_color: (0, 0, 0, 0)
+                    inactive_indicator_color: (0, 0, 0, 0)
+                    focus_color: (0, 0, 0, 0)
+                    ripple_color: (0, 0, 0, 0)
+                    on_release:
+                        nav_drawer.set_state("close")
+                        root.switch_screen("controls")
 
-                MDList:
-                    id: robot_container
-                    spacing: "10dp"
-                    size_hint_y: None
-                    height: self.minimum_height
+                    MDIcon:
+                        icon: "controller"
+                        theme_icon_color: "Custom"
+                        icon_color: "#D4AF37"
+                        pos_hint: {"center_y": .5}
 
-            # Flexible spacer pushing contents upward
+                    MDNavigationDrawerItemText:
+                        text: "Controls"
+                        theme_text_color: "Custom"
+                        text_color: "#FFFFFF"
+
+                MDNavigationDrawerItem:
+                    active: False
+                    active_indicator_color: (0, 0, 0, 0)
+                    inactive_indicator_color: (0, 0, 0, 0)
+                    focus_color: (0, 0, 0, 0)
+                    ripple_color: (0, 0, 0, 0)
+                    on_release:
+                        nav_drawer.set_state("close")
+                        root.switch_screen("camera")
+
+                    MDIcon:
+                        icon: "camera"
+                        theme_icon_color: "Custom"
+                        icon_color: "#D4AF37"
+                        pos_hint: {"center_y": .5}
+
+                    MDNavigationDrawerItemText:
+                        text: "Camera Stream"
+                        theme_text_color: "Custom"
+                        text_color: "#FFFFFF"
+
+                MDNavigationDrawerItem:
+                    active: False
+                    active_indicator_color: (0, 0, 0, 0)
+                    inactive_indicator_color: (0, 0, 0, 0)
+                    focus_color: (0, 0, 0, 0)
+                    ripple_color: (0, 0, 0, 0)
+                    on_release:
+                        nav_drawer.set_state("close")
+                        root.switch_screen("serial")
+
+                    MDIcon:
+                        icon: "console"
+                        theme_icon_color: "Custom"
+                        icon_color: "#D4AF37"
+                        pos_hint: {"center_y": .5}
+
+                    MDNavigationDrawerItemText:
+                        text: "Serial Monitor"
+                        theme_text_color: "Custom"
+                        text_color: "#FFFFFF"
+
+                MDNavigationDrawerItem:
+                    active: False
+                    active_indicator_color: (0, 0, 0, 0)
+                    inactive_indicator_color: (0, 0, 0, 0)
+                    focus_color: (0, 0, 0, 0)
+                    ripple_color: (0, 0, 0, 0)
+                    on_release:
+                        nav_drawer.set_state("close")
+                        root.switch_screen("about")
+
+                    MDIcon:
+                        icon: "information"
+                        theme_icon_color: "Custom"
+                        icon_color: "#D4AF37"
+                        pos_hint: {"center_y": .5}
+
+                    MDNavigationDrawerItemText:
+                        text: "About"
+                        theme_text_color: "Custom"
+                        text_color: "#FFFFFF"

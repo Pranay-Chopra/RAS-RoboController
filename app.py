@@ -6,6 +6,7 @@ from kivymd.app import MDApp
 from kivymd.uix.screenmanager import MDScreenManager
 
 from screens.home import HomeScreen
+from screens.about import AboutScreen
 from services.ble import BLEService
 from services.camera import CameraService
 from services.storage import StorageService
@@ -14,6 +15,8 @@ from services.wifi import WiFiService
 
 class RoboController(MDApp):
     selected_robot = None
+    current_robot = None
+    is_connected = False
 
     def build(self):
         # Configure KivyMD Theme
@@ -28,10 +31,12 @@ class RoboController(MDApp):
 
         # Load KV layout
         Builder.load_file("kv/home.kv")
+        Builder.load_file("kv/about.kv")
 
         # Screen Manager setup
         self.sm = MDScreenManager()
         self.sm.add_widget(HomeScreen(name="home"))
+        self.sm.add_widget(AboutScreen(name="about"))
 
         return self.sm
 
@@ -92,17 +97,44 @@ class RoboController(MDApp):
         # 2. Run BLE scan asynchronously
         self.ble.scan(on_complete_callback=handle_partial_results)
 
-    def connect(self, robot, password=None):
+    def connect(self, robot, password=None, callback=None):
+        """
+        Wi-Fi connects synchronously and returns True/False immediately.
+        BLE is asynchronous: this call kicks off the GATT sequence and
+        returns None right away. The real result arrives later through
+        `callback` (and mirrored onto self.is_connected/current_robot),
+        which is what HomeScreen's polling thread and _ble_status_callback
+        are actually watching.
+        """
         if robot.transport == "wifi":
             success = self.wifi.connect(robot, password)
-        else:
-            success = self.ble.connect(robot)
 
-        if success:
-            robot.connected = True
-            self.selected_robot = robot
+            if success:
+                robot.connected = True
+                self.selected_robot = robot
+                self.current_robot = robot
+                self.is_connected = True
 
-        return success
+            if callback:
+                callback(success)
+
+            return success
+
+        # BLE path
+        def _on_ble_result(connected, status_code=0):
+            if connected:
+                robot.connected = True
+                self.selected_robot = robot
+                self.current_robot = robot
+                self.is_connected = True
+            else:
+                self.is_connected = False
+
+            if callback:
+                callback(connected, status_code)
+
+        self.ble.connect(robot, on_result=_on_ble_result)
+        return None
 
     def disconnect(self):
         if self.selected_robot:
@@ -112,6 +144,8 @@ class RoboController(MDApp):
         self.ble.disconnect()
 
         self.selected_robot = None
+        self.current_robot = None
+        self.is_connected = False
 
 
 if __name__ == "__main__":

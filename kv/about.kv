@@ -1,0 +1,217 @@
+<AboutScreen>:
+
+    MDNavigationLayout:
+
+        # Main Screen Content
+        MDScreenManager:
+
+            MDScreen:
+
+                MDBoxLayout:
+                    orientation: "vertical"
+                    md_bg_color: "#0D0D0D"
+
+                    # Top Bar with Hamburger Menu
+                    MDTopAppBar:
+                        type: "small"
+                        headline_text: "About"
+                        md_bg_color: "#0D0D0D"
+                        specific_text_color: "#D4AF37"
+
+                        MDTopAppBarLeadingButtonContainer:
+
+                            MDActionTopAppBarButton:
+                                icon: "menu"
+                                theme_icon_color: "Custom"
+                                icon_color: "#D4AF37"
+                                on_release: nav_drawer.set_state("toggle")
+
+                    # Main Content Area
+                    MDScrollView:
+                        do_scroll_x: False
+                        do_scroll_y: True
+
+                        MDBoxLayout:
+                            orientation: "vertical"
+                            spacing: "20dp"
+                            padding: "25dp"
+                            size_hint_y: None
+                            height: self.minimum_height
+
+                            # App Info Card
+                            MDCard:
+                                style: "filled"
+                                md_bg_color: "#161616"
+                                radius: [20]
+                                padding: "20dp"
+                                size_hint_y: None
+                                height: "200dp"
+                                orientation: "vertical"
+                                spacing: "10dp"
+
+                                MDIcon:
+                                    icon: "robot"
+                                    theme_icon_color: "Custom"
+                                    icon_color: "#D4AF37"
+                                    halign: "center"
+                                    font_size: "56sp"
+
+                                MDLabel:
+                                    text: "ESP32 Controller"
+                                    halign: "center"
+                                    font_style: "Headline"
+                                    role: "small"
+                                    theme_text_color: "Custom"
+                                    text_color: "#FFFFFF"
+
+                                MDLabel:
+                                    text: "Version 1.0.0"
+                                    halign: "center"
+                                    font_style: "Body"
+                                    role: "medium"
+                                    theme_text_color: "Custom"
+                                    text_color: "#888888"
+
+                            # Project / Details Card
+                            MDCard:
+                                style: "filled"
+                                md_bg_color: "#161616"
+                                radius: [20]
+                                padding: "20dp"
+                                size_hint_y: None
+                                height: "180dp"
+                                orientation: "vertical"
+                                spacing: "10dp"
+
+                                MDLabel:
+                                    text: "System Information"
+                                    font_style: "Title"
+                                    role: "medium"
+                                    theme_text_color: "Custom"
+                                    text_color: "#D4AF37"
+
+                                MDLabel:
+                                    text: "Control and monitor ESP32 hardware over Wi-Fi and BLE.\nFeatures real-time connection status, camera stream, and serial terminal control."
+                                    font_style: "Body"
+                                    role: "medium"
+                                    theme_text_color: "Custom"
+                                    text_color: "#CCCCCC"
+
+
+        # Navigation Drawer Panel
+        MDNavigationDrawer:
+            id: nav_drawer
+            radius: (0, 16, 16, 0)
+            md_bg_color: "#0D0D0D"
+
+            MDNavigationDrawerMenu:
+
+                MDNavigationDrawerHeader:
+                    title: "Navigation"
+                    title_color: "#D4AF37"
+                    spacing: "4dp"
+                    padding: "12dp", "0dp", "0dp", "8dp"
+
+                MDNavigationDrawerItem:
+                    active: False
+                    active_indicator_color: (0, 0, 0, 0)
+                    inactive_indicator_color: (0, 0, 0, 0)
+                    focus_color: (0, 0, 0, 0)
+                    ripple_color: (0, 0, 0, 0)
+                    on_release:
+                        nav_drawer.set_state("close")
+                        root.switch_screen("home")
+
+                    MDIcon:
+                        icon: "home"
+                        theme_icon_color: "Custom"
+                        icon_color: "#D4AF37"
+                        pos_hint: {"center_y": .5}
+
+                    MDNavigationDrawerItemText:
+                        text: "Home"
+                        theme_text_color: "Custom"
+                        text_color: "#FFFFFF"
+
+                MDNavigationDrawerItem:
+                    active: False
+                    active_indicator_color: (0, 0, 0, 0)
+                    inactive_indicator_color: (0, 0, 0, 0)
+                    focus_color: (0, 0, 0, 0)
+                    ripple_color: (0, 0, 0, 0)
+                    on_release:
+                        nav_drawer.set_state("close")
+                        root.switch_screen("controls")
+
+                    MDIcon:
+                        icon: "controller"
+                        theme_icon_color: "Custom"
+                        icon_color: "#D4AF37"
+                        pos_hint: {"center_y": .5}
+
+                    MDNavigationDrawerItemText:
+                        text: "Controls"
+                        theme_text_color: "Custom"
+                        text_color: "#FFFFFF"
+
+                MDNavigationDrawerItem:
+                    active: False
+                    active_indicator_color: (0, 0, 0, 0)
+                    inactive_indicator_color: (0, 0, 0, 0)
+                    focus_color: (0, 0, 0, 0)
+                    ripple_color: (0, 0, 0, 0)
+                    on_release:
+                        nav_drawer.set_state("close")
+                        root.switch_screen("camera")
+
+                    MDIcon:
+                        icon: "camera"
+                        theme_icon_color: "Custom"
+                        icon_color: "#D4AF37"
+                        pos_hint: {"center_y": .5}
+
+                    MDNavigationDrawerItemText:
+                        text: "Camera Stream"
+                        theme_text_color: "Custom"
+                        text_color: "#FFFFFF"
+
+                MDNavigationDrawerItem:
+                    active: False
+                    active_indicator_color: (0, 0, 0, 0)
+                    inactive_indicator_color: (0, 0, 0, 0)
+                    focus_color: (0, 0, 0, 0)
+                    ripple_color: (0, 0, 0, 0)
+                    on_release:
+                        nav_drawer.set_state("close")
+                        root.switch_screen("serial")
+
+                    MDIcon:
+                        icon: "console"
+                        theme_icon_color: "Custom"
+                        icon_color: "#D4AF37"
+                        pos_hint: {"center_y": .5}
+
+                    MDNavigationDrawerItemText:
+                        text: "Serial Monitor"
+                        theme_text_color: "Custom"
+                        text_color: "#FFFFFF"
+
+                MDNavigationDrawerItem:
+                    active: True
+                    active_indicator_color: (0.83, 0.68, 0.21, 0.15)
+                    inactive_indicator_color: (0.83, 0.68, 0.21, 0.15)
+                    focus_color: (0.83, 0.68, 0.21, 0.15)
+                    ripple_color: (0.83, 0.68, 0.21, 0.15)
+                    on_release:
+                        nav_drawer.set_state("close")
+
+                    MDIcon:
+                        icon: "information"
+                        theme_icon_color: "Custom"
+                        icon_color: "#D4AF37"
+                        pos_hint: {"center_y": .5}
+
+                    MDNavigationDrawerItemText:
+                        text: "About"
+                        theme_text_color: "Custom"
+                        text_color: "#FFFFFF"
