@@ -85,6 +85,13 @@ class QuizAPI:
     def my_results(self, on_done):
         self._call("my_results", {}, on_done)
 
+    def get_config(self, on_done):
+        """-> {quizSecondsPerQuestion, quizTotalSeconds}; 0 == unset.
+        Any signed-in user. Older backends without this action just
+        return an 'Unknown action' error -- callers fall back to a
+        local default."""
+        self._call("get_config", {}, on_done)
+
     # -- admin ------------------------------------------------------
     def create_problem(self, question, options, correct, on_done):
         """options: {"A":..,"B":..,"C":..,"D":..}; correct: "A".."D"."""
@@ -96,6 +103,19 @@ class QuizAPI:
 
     def delete_problem(self, problem_id, on_done):
         self._call("delete_problem", {"id": problem_id}, on_done)
+
+    def set_config(self, seconds_per_question, total_seconds, on_done):
+        """Admin only. Values are clamped server-side to max(0, floor(n));
+        0 means 'unset'. -> the stored {quizSecondsPerQuestion,
+        quizTotalSeconds}."""
+        self._call(
+            "set_config",
+            {
+                "quizSecondsPerQuestion": seconds_per_question,
+                "quizTotalSeconds": total_seconds,
+            },
+            on_done,
+        )
 
     def list_results(self, on_done):
         """-> list of submission dicts across all students (admin only)."""

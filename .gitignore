@@ -5,3 +5,4 @@ __pycache__
 .android-venv
 .claude
 bin
+backend/quiz_backend.gs

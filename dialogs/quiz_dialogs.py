@@ -1,4 +1,5 @@
-"""Admin-only dialogs for the Quiz screen: post a new problem.
+"""Admin-only dialogs for the Quiz screen: post a new problem, and set
+the answer-window timer.
 
 Everyone's results are shown in the RESULTS tab of the Quiz screen's
 admin carousel (screens/quiz.py), not in a dialog."""
@@ -152,3 +153,118 @@ class PostProblemDialog:
 
     def open(self):
         self.dialog.open()
+
+
+class TimerConfigDialog:
+    """Admin: set the quiz answer window via the backend `set_config`
+    action. Seconds-per-question drives the per-question countdown;
+    total-seconds (optional) is the web client's flat batch cap. 0 in
+    either box means 'unset' -> clients use their built-in default."""
+
+    def __init__(self, api, on_saved=None):
+        self.api = api
+        self.on_saved = on_saved
+
+        form = MDBoxLayout(
+            orientation="vertical",
+            spacing=dp(10),
+            padding=(dp(2), dp(4), dp(2), dp(4)),
+            size_hint_y=None,
+            adaptive_height=True,
+        )
+
+        hint = MDLabel(
+            text="Seconds per question drives the per-question timer. "
+            "Total seconds (optional) caps the whole batch instead. "
+            "Leave a box blank or 0 to unset it.",
+            theme_text_color="Custom",
+            text_color=(0.7, 0.7, 0.7, 1),
+            font_style="Caption",
+            size_hint_y=None,
+        )
+        # adaptive_height measures the unwrapped single line, so it under-
+        # reports and the text rides up under the dialog title. Bind the
+        # real wrapped height instead.
+        hint.bind(
+            width=lambda inst, w: setattr(inst, "text_size", (w, None)),
+            texture_size=lambda inst, ts: setattr(inst, "height", ts[1]),
+        )
+        form.add_widget(hint)
+
+        self.per_q = MDTextField(
+            hint_text="Seconds per question", mode="line", input_filter="int"
+        )
+        self.total = MDTextField(
+            hint_text="Total seconds (optional)", mode="line", input_filter="int"
+        )
+        form.add_widget(self.per_q)
+        form.add_widget(self.total)
+
+        # MDDialog doesn't measure a bare box as custom content reliably
+        # (the title ends up overlapping it) -- give it a bounded scroll
+        # with an explicit height, same as PostProblemDialog.
+        scroll = MDScrollView(
+            size_hint=(1, None),
+            height=min(dp(220), Window.height * 0.5),
+            do_scroll_x=False,
+        )
+        scroll.add_widget(form)
+
+        self.dialog = MDDialog(
+            title="Quiz Timer",
+            type="custom",
+            content_cls=scroll,
+            buttons=[
+                MDFlatButton(text="CANCEL", on_release=lambda *a: self.dialog.dismiss()),
+                MDRaisedButton(
+                    text="SAVE",
+                    md_bg_color=GOLD,
+                    text_color=(0, 0, 0, 1),
+                    on_release=self._save,
+                ),
+            ],
+        )
+        Clock.schedule_once(lambda *_: self.dialog.update_height(), 0)
+
+    def open(self):
+        self.dialog.open()
+        self.api.get_config(self._on_config)
+
+    def _on_config(self, data, error):
+        if error or not isinstance(data, dict):
+            return  # older backend / offline -> just start blank
+        spq = int(data.get("quizSecondsPerQuestion") or 0)
+        tot = int(data.get("quizTotalSeconds") or 0)
+        self.per_q.text = str(spq) if spq else ""
+        self.total.text = str(tot) if tot else ""
+
+    def _save(self, *_):
+        def to_int(s):
+            s = (s or "").strip()
+            return int(s) if s else 0
+
+        try:
+            spq, tot = to_int(self.per_q.text), to_int(self.total.text)
+        except ValueError:
+            toast("Enter whole numbers")
+            return
+        if spq < 0 or tot < 0:
+            toast("Seconds can't be negative")
+            return
+        self._set_buttons_enabled(False)
+        toast("Saving…")
+        self.api.set_config(spq, tot, self._on_done)
+
+    def _set_buttons_enabled(self, enabled):
+        for btn in self.dialog.buttons:
+            btn.disabled = not enabled
+
+    def _on_done(self, data, error):
+        self._set_buttons_enabled(True)
+        if error:
+            toast(error)
+            return
+        toast("Timer updated")
+        self.dialog.dismiss()
+        if self.on_saved:
+            Clock.schedule_once(lambda dt: self.on_saved(), 0)

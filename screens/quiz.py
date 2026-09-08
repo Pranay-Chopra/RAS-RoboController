@@ -18,7 +18,7 @@ from kivymd.toast import toast
 import quiz_config
 from services.google_auth import GoogleAuth
 from services.quiz_api import QuizAPI
-from dialogs.quiz_dialogs import PostProblemDialog
+from dialogs.quiz_dialogs import PostProblemDialog, TimerConfigDialog
 
 GOLD = (0.83, 0.68, 0.21, 1)
 
@@ -182,8 +182,12 @@ class QuizScreen(MDScreen):
         self._pending_ids = []
         self._busy = False
         self._q_timers = []          # live Clock events, one per pending card
-        self._expired = set()        # pids whose 15s window has closed
+        self._expired = set()        # pids whose answer window has closed
         self._submitting = False
+        # Per-question window, in seconds. Server-configurable via the
+        # backend `get_config` action (quizSecondsPerQuestion); falls
+        # back to ANSWER_SECONDS when unset or the backend is older.
+        self._answer_seconds = ANSWER_SECONDS
         # Content area: "plain" is a single scroll (sign-in / student);
         # "admin" is a MANAGE / RESULTS carousel.
         self._layout_mode = None
@@ -312,6 +316,18 @@ class QuizScreen(MDScreen):
             # A results hiccup shouldn't block taking the quiz.
             print(f"[QuizScreen] my_results failed: {error}")
         self._my_results = data or []
+        # One more hop: pull the (admin-tunable) answer-window length so
+        # this client uses the same limit as the web one.
+        self._api.get_config(self._on_config)
+
+    def _on_config(self, data, error):
+        secs = 0
+        if not error and isinstance(data, dict):
+            try:
+                secs = int(data.get("quizSecondsPerQuestion") or 0)
+            except (TypeError, ValueError):
+                secs = 0
+        self._answer_seconds = secs if secs > 0 else ANSWER_SECONDS
         self._render_quiz()
 
     def _answered_map(self):
@@ -338,7 +354,7 @@ class QuizScreen(MDScreen):
         self._set_status("")
 
         if self._auth.is_admin:
-            body.add_widget(self._post_problem_button())
+            body.add_widget(self._manage_toolbar())
             if self._carousel is not None and self._carousel.index == 1:
                 self._ensure_results_loaded()
 
@@ -391,7 +407,7 @@ class QuizScreen(MDScreen):
         card._timer_label = None
         if state is None:
             card._timer_label = _label(
-                self._timer_text(ANSWER_SECONDS),
+                self._timer_text(self._answer_seconds),
                 text_color=GOLD,
                 bold=True,
                 font_style="Caption",
@@ -442,7 +458,7 @@ class QuizScreen(MDScreen):
         return f"{max(seconds, 0)}s to answer"
 
     def _start_q_timer(self, pid, card):
-        card._seconds_left = ANSWER_SECONDS
+        card._seconds_left = self._answer_seconds
         ev = Clock.schedule_interval(
             lambda dt, p=pid, c=card: self._tick_q_timer(p, c), 1
         )
@@ -519,11 +535,25 @@ class QuizScreen(MDScreen):
         self._load_problems()
 
     # ---------------------------- admin ----------------------------
-    def _post_problem_button(self):
-        """A single gold '+' aligned to the right of the MANAGE tab."""
-        bar = AnchorLayout(
-            anchor_x="right", size_hint_y=None, height=dp(48)
+    def _manage_toolbar(self):
+        """Right-aligned MANAGE-tab actions: configure the answer timer,
+        then a gold '+' to post a problem."""
+        bar = AnchorLayout(anchor_x="right", size_hint_y=None, height=dp(48))
+        row = MDBoxLayout(
+            orientation="horizontal", adaptive_width=True, spacing=dp(4)
         )
+
+        timer_btn = MDIconButton(
+            icon="timer-outline",
+            theme_text_color="Custom",
+            text_color=GOLD,
+        )
+        timer_btn.bind(
+            on_release=lambda *a: TimerConfigDialog(
+                self._api, on_saved=self._load_problems
+            ).open()
+        )
+
         add = MDIconButton(
             icon="plus",
             theme_text_color="Custom",
@@ -534,7 +564,10 @@ class QuizScreen(MDScreen):
                 self._api, on_saved=self._load_problems
             ).open()
         )
-        bar.add_widget(add)
+
+        row.add_widget(timer_btn)
+        row.add_widget(add)
+        bar.add_widget(row)
         return bar
 
     # ------------------------- content layout -------------------------
