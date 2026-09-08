@@ -29,10 +29,12 @@ jobs:
           restore-keys: buildozer-
 
       - name: Build debug APK
-        uses: ArtemSBulgakov/buildozer-action@v1
-        with:
-          command: buildozer android debug
-          buildozer_version: stable
+        run: |
+          docker run --rm \
+            --volume "$PWD/.buildozer":/home/user/.buildozer \
+            --volume "$PWD":/home/user/hostcwd \
+            ghcr.io/kivy/buildozer:latest \
+            buildozer android debug
 
       # Always available from the run's "Artifacts" section, tag or not.
       - name: Upload APK artifact
