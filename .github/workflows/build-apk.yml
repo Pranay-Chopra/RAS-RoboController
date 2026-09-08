@@ -30,11 +30,22 @@ jobs:
 
       - name: Build debug APK
         run: |
+          mkdir -p .buildozer
+          # The image's ENTRYPOINT is already `buildozer`, so the args are
+          # just `android debug` (passing `buildozer android debug` makes it
+          # run `buildozer buildozer android debug` -> "Unknown command/target
+          # buildozer"). The container runs as uid 1000 while the runner
+          # checkout is uid 1001, so hand the tree over for the build.
+          sudo chown -R 1000:1000 "$PWD"
           docker run --rm \
-            --volume "$PWD/.buildozer":/home/user/.buildozer \
             --volume "$PWD":/home/user/hostcwd \
+            --volume "$PWD/.buildozer":/home/user/.buildozer \
             ghcr.io/kivy/buildozer:latest \
-            buildozer android debug
+            android debug
+
+      - name: Restore workspace ownership
+        if: always()
+        run: sudo chown -R "$(id -u):$(id -g)" "$PWD"
 
       # Always available from the run's "Artifacts" section, tag or not.
       - name: Upload APK artifact
