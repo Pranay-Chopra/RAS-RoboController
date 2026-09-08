@@ -18,15 +18,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # The Android SDK/NDK + python-for-android build tree is ~1.5 GB.
-      # Cache it so only the first run (or a buildozer.spec change) pays
-      # the full download + compile.
-      - name: Cache Buildozer state
-        uses: actions/cache@v4
+      # The Android SDK/NDK + python-for-android tree is ~1.5 GB; cache it
+      # so only the first run (or a buildozer.spec change) pays the full
+      # download + compile. Restore-only here + a save step gated on
+      # success(), so a half-finished .buildozer from a failed run never
+      # gets persisted and poisons later runs (that's what produced the
+      # "build-tools folder not found / Aidl not found" error -- a partial
+      # SDK from an earlier broken run was being restored).
+      - name: Restore Buildozer cache
+        id: cache
+        uses: actions/cache/restore@v4
         with:
           path: .buildozer
-          key: buildozer-${{ hashFiles('buildozer.spec') }}
-          restore-keys: buildozer-
+          key: buildozer-v2-${{ hashFiles('buildozer.spec') }}
+          restore-keys: buildozer-v2-
 
       - name: Build debug APK
         run: |
@@ -46,6 +51,15 @@ jobs:
       - name: Restore workspace ownership
         if: always()
         run: sudo chown -R "$(id -u):$(id -g)" "$PWD"
+
+      # Only persist .buildozer after a green build, and only when the
+      # exact key wasn't already a hit.
+      - name: Save Buildozer cache
+        if: success() && steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .buildozer
+          key: buildozer-v2-${{ hashFiles('buildozer.spec') }}
 
       # Always available from the run's "Artifacts" section, tag or not.
       - name: Upload APK artifact
