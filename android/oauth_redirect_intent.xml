@@ -1,0 +1,20 @@
+<!--
+  Lets Google's OAuth redirect come straight back into this app after the
+  user consents in the browser. buildozer inserts this into the
+  PythonActivity <activity> element (android.manifest.intent_filters in
+  buildozer.spec).
+
+  Replace the scheme below with your iOS OAuth client's reversed client
+  id  (Google shows it as the "iOS URL scheme"):
+
+      com.googleusercontent.apps.1090468690005-do85caobta0nv2fjgbvmqijcc5hs4p3k
+
+  It MUST equal quiz_config.OAUTH_REDIRECT_SCHEME (which is derived from
+  quiz_config.GOOGLE_CLIENT_ID).
+-->
+<intent-filter>
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="com.googleusercontent.apps.1090468690005-do85caobta0nv2fjgbvmqijcc5hs4p3k" />
+</intent-filter>

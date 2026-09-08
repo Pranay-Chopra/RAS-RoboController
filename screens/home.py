@@ -7,14 +7,12 @@ from kivy.properties import (
     StringProperty,
 )
 from kivymd.app import MDApp
-from kivymd.uix.list import (
-    MDListItem,
-    MDListItemHeadlineText,
-    MDListItemSupportingText,
-)
+from kivymd.uix.list import IconLeftWidget, TwoLineIconListItem
 from kivymd.uix.screen import MDScreen
 
 from dialogs.connect_dialog import ConnectDialog
+from dialogs.location_dialog import LocationDialog
+from services.location import is_location_enabled
 
 
 class HomeScreen(MDScreen):
@@ -33,14 +31,20 @@ class HomeScreen(MDScreen):
         return MDApp.get_running_app()
 
     def switch_screen(self, screen_name):
-        """Switches the app root screen manager view from the hamburger menu."""
+        """Switches the app root screen manager view from the navigation drawer."""
         if hasattr(self.app, "root") and self.app.root:
             if hasattr(self.app.root, "current"):
                 self.app.root.current = screen_name
-            elif hasattr(self.app.root, "has_screen") and self.app.root.has_screen(screen_name):
+            elif hasattr(self.app.root, "has_screen") and self.app.root.has_screen(
+                screen_name
+            ):
                 self.app.root.current = screen_name
             else:
                 print(f"[HomeScreen] Screen '{screen_name}' not found on app root.")
+
+    def open_connect_dialog(self):
+        """Method called directly by the KV button on_release action."""
+        self.scan()
 
     def on_enter(self):
         print("[HomeScreen] Loaded")
@@ -72,13 +76,31 @@ class HomeScreen(MDScreen):
         Clock.schedule_once(_check_binding, 0.5)
 
     def scan(self):
+        """Checks if location services are enabled on Android before launching scan."""
+        if not is_location_enabled():
+            self.location_dialog = LocationDialog(on_enable_callback=self._on_location_prompt_closed)
+            self.location_dialog.open()
+            return
+
+        self._start_scan_process()
+
+    def _on_location_prompt_closed(self):
+        """Callback triggered after opening system location settings."""
+        print("[HomeScreen] Location settings opened; pending user activation...")
+
+    def _start_scan_process(self):
+        """Initiates physical network/BLE scan."""
         print("[HomeScreen] Starting device scan...")
         self.scanning = True
         self.status_icon = "radar"
         self.connection_status = "Scanning for robots..."
 
         self.robots.clear()
-        self.ids.robot_container.clear_widgets()
+
+        # Safely access robot_container ID without throwing AttributeError
+        container = self.ids.get("robot_container")
+        if container:
+            container.clear_widgets()
 
         self.app.scan(self.scan_complete)
 
@@ -129,34 +151,63 @@ class HomeScreen(MDScreen):
         self.robots.sort(key=self._get_intensity, reverse=True)
 
     def _render_robot_list(self):
-        """Rebuilds the MDListItem widgets from self.robots cleanly."""
-        self.ids.robot_container.clear_widgets()
+        """Rebuilds TwoLineIconListItem widgets from self.robots for KivyMD 1.2.0."""
+        container = self.ids.get("robot_container")
+        if not container:
+            print("[HomeScreen] Warning: 'robot_container' ID missing in KV layout!")
+            return
+
+        container.clear_widgets()
 
         for robot in self.robots:
-            item = MDListItem()
-            item.add_widget(MDListItemHeadlineText(text=robot.name))
-
             transport_text = getattr(robot, "transport", "WIFI").upper()
             rssi = getattr(robot, "rssi", getattr(robot, "intensity", None))
 
             if rssi is not None and rssi != -999:
-                supporting_text = f"{transport_text}  •  {rssi} dBm"
+                secondary_text = f"{transport_text}  •  {rssi} dBm"
             else:
-                supporting_text = transport_text
+                secondary_text = transport_text
 
-            item.add_widget(MDListItemSupportingText(text=supporting_text))
+            item = TwoLineIconListItem(
+                text=robot.name,
+                secondary_text=secondary_text,
+                on_release=self._create_connect_callback(robot),
+            )
 
-            # Use factory callback to prevent lambda late-binding issues
-            item.bind(on_release=self._create_connect_callback(robot))
-            self.ids.robot_container.add_widget(item)
+            icon_name = (
+                "bluetooth"
+                if transport_text in ["BLE", "BLUETOOTH"]
+                else "wifi"
+            )
+            icon = IconLeftWidget(
+                icon=icon_name,
+                theme_text_color="Custom",
+                text_color=(0.83, 0.68, 0.21, 1),
+                on_release=self._create_connect_callback(robot),
+            )
+            item.add_widget(icon)
+
+            container.add_widget(item)
 
     def _create_connect_callback(self, robot):
         """Creates an explicit click handler for each list item."""
+
         def callback(instance):
             self.connect(robot)
+
         return callback
 
     def connect(self, robot):
+        if self.scanning or self._pending_robot is not None:
+            # Already connecting (or a stale in-flight attempt hasn't
+            # resolved yet) — ignore duplicate taps rather than kicking
+            # off a second connect that would tear down the first one.
+            print(
+                f"[HomeScreen] Ignoring connect() to {robot.name}: "
+                f"already connecting to {getattr(self._pending_robot, 'name', None)}"
+            )
+            return
+
         transport = getattr(robot, "transport", "wifi").lower()
 
         if transport == "wifi":
@@ -168,33 +219,42 @@ class HomeScreen(MDScreen):
             self._connect_ble(robot)
 
     def _connect_wifi(self, robot, password):
+        """Connects over Wi-Fi.
+
+        app.connect() is already asynchronous — it spawns its own
+        background thread and returns None immediately, reporting the
+        real outcome later via `callback`. Previously this method wrapped
+        the call in a second thread and inspected app.is_connected right
+        after starting it, milliseconds before the actual TCP handshake
+        completed. That made "Wi-Fi Connection Failed" fire almost every
+        time regardless of the real outcome, and made it easy to trigger
+        a second overlapping connect() call while the first was still in
+        flight (which tears down the first connection's socket/RX thread
+        mid-use and can crash the app). Passing a real callback and
+        waiting for it fixes both.
+        """
         self.connection_status = f"Connecting to {robot.name}..."
         self.status_icon = "wifi-sync"
         self._pending_robot = robot
 
-        def _worker():
-            success = self.app.connect(robot, password)
-
+        def _on_wifi_result(success):
             def _finish_connect(dt):
                 if success:
                     self._update_connection(robot)
                 else:
-                    is_bound = getattr(self.app, "is_connected", False)
-                    if is_bound:
-                        self._update_connection(robot)
-                    else:
-                        self.connected = False
-                        self.connection_status = "Wi-Fi Connection Failed"
-                        self.status_icon = "wifi-alert"
+                    self.connected = False
+                    self._pending_robot = None
+                    self.connection_status = "Wi-Fi Connection Failed"
+                    self.status_icon = "wifi-alert"
 
             Clock.schedule_once(_finish_connect, 0)
 
-        threading.Thread(target=_worker, daemon=True).start()
+        self.app.connect(robot, password, callback=_on_wifi_result)
 
     def _connect_ble(self, robot):
         """Handles BLE connection asynchronously with callback safety, active polling, and a 10s fallback timeout."""
         self.connection_status = f"Connecting BLE: {robot.name}..."
-        self.status_icon = "bluetooth-sync"
+        self.status_icon = "bluetooth-settings"
         self._pending_robot = robot
 
         if self._ble_timeout_ev:
@@ -210,17 +270,23 @@ class HomeScreen(MDScreen):
                     print(f"[HomeScreen] Async BLE connected to {robot.name}")
                     self._update_connection(robot)
                 else:
-                    print(f"[HomeScreen] Async BLE failed/disconnected (code: {status_code})")
+                    print(
+                        f"[HomeScreen] Async BLE failed/disconnected (code: {status_code})"
+                    )
                     self.connected = False
                     self._pending_robot = None
-                    self.connection_status = f"BLE Connection Failed ({status_code})"
+                    self.connection_status = (
+                        f"BLE Connection Failed ({status_code})"
+                    )
                     self.status_icon = "bluetooth-off"
 
             Clock.schedule_once(_update_ble_ui, 0)
 
         # 2. Fallback Safety Timeout
         def _on_ble_timeout(dt):
-            print("[HomeScreen] BLE connection timed out waiting for GATT callback.")
+            print(
+                "[HomeScreen] BLE connection timed out waiting for GATT callback."
+            )
             self.connected = False
             self._pending_robot = None
             self.connection_status = "BLE Connection Timed Out"
@@ -228,7 +294,7 @@ class HomeScreen(MDScreen):
 
         self._ble_timeout_ev = Clock.schedule_once(_on_ble_timeout, 10.0)
 
-        # 3. Active Polling Thread (Catches backend state if JNI callback drops)
+        # 3. Active Polling Thread
         def _poll_ble_connection():
             timeout = 10.0
             poll_interval = 0.2
@@ -236,16 +302,22 @@ class HomeScreen(MDScreen):
 
             while elapsed < timeout:
                 if self.connected:
-                    return  # Already resolved by callback
+                    return
 
                 is_connected = getattr(self.app, "is_connected", False)
                 curr_robot = getattr(self.app, "current_robot", None)
 
-                if is_connected or (curr_robot and curr_robot.name == robot.name):
-                    print(f"[HomeScreen] Polling detected BLE connection to {robot.name}")
+                if is_connected or (
+                    curr_robot and curr_robot.name == robot.name
+                ):
+                    print(
+                        f"[HomeScreen] Polling detected BLE connection to {robot.name}"
+                    )
                     if self._ble_timeout_ev:
                         self._ble_timeout_ev.cancel()
-                    Clock.schedule_once(lambda dt: self._update_connection(robot), 0)
+                    Clock.schedule_once(
+                        lambda dt: self._update_connection(robot), 0
+                    )
                     return
 
                 time.sleep(poll_interval)
@@ -253,7 +325,7 @@ class HomeScreen(MDScreen):
 
         threading.Thread(target=_poll_ble_connection, daemon=True).start()
 
-        # 4. Attach callback handler to app instance and invoke connect
+        # 4. Attach callback handler and invoke connect
         if hasattr(self.app, "ble_callback"):
             self.app.ble_callback = _ble_status_callback
 
@@ -279,7 +351,9 @@ class HomeScreen(MDScreen):
     def disconnect(self):
         transport = "wifi"
         if hasattr(self.app, "current_robot") and self.app.current_robot:
-            transport = getattr(self.app.current_robot, "transport", "wifi").lower()
+            transport = getattr(
+                self.app.current_robot, "transport", "wifi"
+            ).lower()
 
         if self._ble_timeout_ev:
             self._ble_timeout_ev.cancel()

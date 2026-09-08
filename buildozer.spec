@@ -15,13 +15,13 @@ package.domain = org.ieeeras
 source.dir = .
 source.include_exts = py,kv,png,jpg,jpeg,svg,json,ttf
 
-version = 0.2.0
+version = 1.0.0
 
 # ------------------------------------------------------------------
 # Requirements
 # ------------------------------------------------------------------
 
-requirements = python3==3.11.15, hostpython3==3.11.15, kivy, https://github.com/kivymd/KivyMD/archive/master.zip, pyjnius, bleak, typing_extensions, materialyoucolor==3.0.3, materialshapes, pycairo, pillow, exceptiongroup, asyncgui, asynckivy, setuptools
+requirements = python3==3.11.15, hostpython3==3.11.15, kivy, kivymd, pyjnius, bleak, typing_extensions, materialyoucolor==3.0.3, materialshapes, pycairo, pillow, exceptiongroup, asyncgui, asynckivy, setuptools, requests, urllib3, chardet, idna, openssl, certifi
 
 # ------------------------------------------------------------------
 # Orientation
@@ -54,6 +54,9 @@ android.gradle_dependencies = org.jetbrains.kotlinx:kotlinx-coroutines-android:1
 
 android.permissions = INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_STATE, CHANGE_NETWORK_STATE, ACCESS_FINE_LOCATION, BLUETOOTH, BLUETOOTH_ADMIN, BLUETOOTH_SCAN, BLUETOOTH_CONNECT
 
+# Catches the Google OAuth redirect back into the app (Quiz sign-in).
+android.manifest.intent_filters = android/oauth_redirect_intent.xml
+
 # ------------------------------------------------------------------
 # Android Behaviour
 # ------------------------------------------------------------------
@@ -70,8 +73,8 @@ log_level = 2
 # Assets
 # ------------------------------------------------------------------
 
-presplash.filename =
-icon.filename =
+presplash.filename = %(source.dir)s/assets/icons/presplash.png
+icon.filename = %(source.dir)s/assets/icons/icon.png
 
 # ------------------------------------------------------------------
 # Build Options

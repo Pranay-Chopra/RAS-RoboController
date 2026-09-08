@@ -1,0 +1,111 @@
+<SettingsScreen>:
+    MDBoxLayout:
+        orientation: 'vertical'
+
+        MDFloatLayout:
+            id: top_bar
+            size_hint_y: None
+            height: dp(56)
+            md_bg_color: 0.08, 0.08, 0.08, 1
+
+            MDIconButton:
+                icon: "arrow-left"
+                theme_text_color: "Custom"
+                text_color: 0.83, 0.68, 0.21, 1
+                pos_hint: {"center_y": 0.5}
+                x: dp(8)
+                on_release: root.switch_screen("home")
+
+            MDLabel:
+                text: "Connection Settings"
+                font_style: "H6"
+                bold: True
+                halign: "center"
+                theme_text_color: "Custom"
+                text_color: 0.83, 0.68, 0.21, 1
+                size_hint: 1, None
+                size: self.texture_size
+                pos_hint: {"center_x": 0.5, "center_y": 0.5}
+
+        ScrollView:
+            do_scroll_x: False
+
+            MDBoxLayout:
+                orientation: 'vertical'
+                padding: dp(20)
+                spacing: dp(16)
+                size_hint_y: None
+                height: self.minimum_height
+
+                MDLabel:
+                    text: "Wi-Fi"
+                    bold: True
+                    font_style: "H6"
+                    theme_text_color: "Custom"
+                    text_color: 0.83, 0.68, 0.21, 1
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+                MDTextField:
+                    id: wifi_ip_field
+                    hint_text: "IP address"
+                    helper_text: "e.g. 192.168.4.1"
+                    helper_text_mode: "on_focus"
+                    mode: "line"
+
+                MDTextField:
+                    id: wifi_ports_field
+                    hint_text: "Ports (comma-separated, tried in order)"
+                    helper_text: "Comma-separated, e.g. 8888, 8080, 80"
+                    helper_text_mode: "on_focus"
+                    mode: "line"
+
+                MDLabel:
+                    text: "BLE  \u2014  Nordic UART UUIDs"
+                    bold: True
+                    font_style: "H6"
+                    theme_text_color: "Custom"
+                    text_color: 0.83, 0.68, 0.21, 1
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                    padding: [0, dp(12), 0, 0]
+
+                MDTextField:
+                    id: ble_service_field
+                    hint_text: "Service UUID"
+                    mode: "line"
+
+                MDTextField:
+                    id: ble_rx_field
+                    hint_text: "RX characteristic UUID (app writes here)"
+                    mode: "line"
+
+                MDTextField:
+                    id: ble_tx_field
+                    hint_text: "TX characteristic UUID (app subscribes here)"
+                    mode: "line"
+
+                MDBoxLayout:
+                    orientation: 'horizontal'
+                    spacing: dp(12)
+                    size_hint_y: None
+                    height: dp(50)
+                    padding: [0, dp(20), 0, dp(8)]
+
+                    MDFlatButton:
+                        text: "RESET DEFAULTS"
+                        theme_text_color: "Custom"
+                        text_color: 0.83, 0.68, 0.21, 1
+                        on_release: root.reset_defaults()
+
+                    Widget:
+                        # spacer, pushes SAVE to the right
+
+                    MDRaisedButton:
+                        text: "SAVE"
+                        elevation: 0
+                        md_bg_color: 0.83, 0.68, 0.21, 1
+                        text_color: 0, 0, 0, 1
+                        bold: True
+                        padding: [dp(24), dp(12)]
+                        on_release: root.save_settings()

@@ -1,0 +1,389 @@
+#:kivy 2.0
+
+<SectionHeader@MDLabel>:
+    bold: True
+    font_style: "H6"
+    theme_text_color: "Custom"
+    text_color: 0.83, 0.68, 0.21, 1
+    size_hint_y: None
+    height: self.texture_size[1]
+    padding: [0, dp(18), 0, dp(4)]
+
+<SubHeader@MDLabel>:
+    bold: True
+    font_style: "Subtitle1"
+    theme_text_color: "Custom"
+    text_color: 0.83, 0.68, 0.21, 1
+    size_hint_y: None
+    height: self.texture_size[1]
+    padding: [0, dp(10), 0, dp(2)]
+
+<BodyText@MDLabel>:
+    theme_text_color: "Custom"
+    text_color: 0.85, 0.85, 0.85, 1
+    font_style: "Body1"
+    size_hint_y: None
+    height: self.texture_size[1]
+    text_size: self.width, None
+    halign: "left"
+
+<CodeText@MDLabel>:
+    theme_text_color: "Custom"
+    text_color: 0.95, 0.95, 0.6, 1
+    font_name: "data/fonts/RobotoMono-Regular.ttf"
+    font_size: "13sp"
+    size_hint_y: None
+    height: self.texture_size[1]
+    text_size: self.width, None
+    halign: "left"
+    padding: [dp(12), dp(6), dp(12), dp(6)]
+    canvas.before:
+        Color:
+            rgba: 0.14, 0.14, 0.14, 1
+        RoundedRectangle:
+            pos: self.x, self.y
+            size: self.size
+            radius: [dp(6)]
+
+<HelpDivider@MDSeparator>:
+    height: dp(1)
+    color: 0.22, 0.22, 0.22, 1
+
+
+<HelpScreen>:
+    MDNavigationLayout:
+
+        ScreenManager:
+            MDScreen:
+                MDBoxLayout:
+                    orientation: 'vertical'
+
+                    MDFloatLayout:
+                        id: top_bar
+                        size_hint_y: None
+                        height: dp(56)
+                        md_bg_color: 0.08, 0.08, 0.08, 1
+
+                        MDIconButton:
+                            icon: "menu"
+                            theme_text_color: "Custom"
+                            text_color: 0.83, 0.68, 0.21, 1
+                            pos_hint: {"center_y": 0.5}
+                            x: dp(8)
+                            on_release: nav_drawer.set_state("toggle")
+
+                        MDLabel:
+                            text: "Help & Documentation"
+                            font_style: "H6"
+                            bold: True
+                            halign: "center"
+                            theme_text_color: "Custom"
+                            text_color: 0.83, 0.68, 0.21, 1
+                            size_hint: 1, None
+                            size: self.texture_size
+                            pos_hint: {"center_x": 0.5, "center_y": 0.5}
+
+                    ScrollView:
+                        do_scroll_x: False
+
+                        MDBoxLayout:
+                            orientation: 'vertical'
+                            padding: dp(20)
+                            spacing: dp(6)
+                            size_hint_y: None
+                            height: self.minimum_height
+
+                            SectionHeader:
+                                text: "Getting Started"
+
+                            BodyText:
+                                text:
+                                    "This app can control robots over Wi-Fi or Bluetooth Low Energy (BLE). Find your robot on the Home screen, connect to it, then drive it from either the Controls screen (joysticks, buttons, sliders, toggles) or the Serial Monitor (raw text commands)."
+
+                            HelpDivider:
+
+                            SectionHeader:
+                                text: "Connecting \u2014 Wi-Fi"
+
+                            BodyText:
+                                text:
+                                    "The app opens a plain TCP socket directly to the robot's IP address, trying each configured port in order until one accepts a connection. Your firmware needs to be running a TCP server (in AP or station mode) on one of those ports."
+
+                            BodyText:
+                                text:
+                                    "Default target: 192.168.4.1 on ports 8888, 8080, then 80. Change these under Connection Settings if your robot uses a different IP or port."
+
+                            BodyText:
+                                text:
+                                    "Every line sent or received over Wi-Fi is terminated with CRLF (\"\\r\\n\") -- both the app and your sketch should frame commands the same way so neither side gets partial lines."
+
+                            HelpDivider:
+
+                            SectionHeader:
+                                text: "Connecting \u2014 Bluetooth (BLE)"
+
+                            BodyText:
+                                text:
+                                    "BLE uses the standard Nordic UART Service (NUS): the app writes commands to the RX characteristic and subscribes to notifications on the TX characteristic. This matches the ble_uart_echo.ino example sketch, which implements NUS out of the box."
+
+                            CodeText:
+                                text:
+                                    "Service:  6e400001-b5a3-f393-e9a0-e9b0c5c9b300\nRX (app writes):    6e400002-...-c9b300\nTX (app subscribes): 6e400003-...-c9b300"
+
+                            BodyText:
+                                text:
+                                    "\"RX\"/\"TX\" are named from the peripheral's (robot's) point of view -- RX is where it receives writes, TX is where it sends notifications. Same CRLF framing as Wi-Fi applies here too."
+
+                            HelpDivider:
+
+                            SectionHeader:
+                                text: "Connection Settings"
+
+                            BodyText:
+                                text:
+                                    "Open Connection Settings from the Home screen (gear icon) to change the Wi-Fi IP/ports or the three BLE UUIDs without editing code. Ports accept a comma-separated list, tried in order. Settings persist across app restarts and apply on the next Connect."
+
+                            BodyText:
+                                text:
+                                    "If you change the UUIDs on the sketch side, update them here to match -- both sides need to agree for a BLE connection to find the right characteristics."
+
+                            HelpDivider:
+
+                            SectionHeader:
+                                text: "Controls \u2014 Edit Mode"
+
+                            BodyText:
+                                text:
+                                    "The top bar's EDIT/PLAY button toggles edit mode. In EDIT mode, tap an element to select it and reveal four handles just outside its corners: pencil (rebind), trash (delete), diagonal arrows (resize), and the circular arrow above it (rotate). Drag anywhere inside an element to reposition it."
+
+                            BodyText:
+                                text:
+                                    "Tap the + icon (only enabled in edit mode) to add a new element: Joystick, Button, Slider, Toggle Switch, or Label. Switch back to PLAY mode to actually drive the robot -- elements don't send commands while in edit mode."
+
+                            HelpDivider:
+
+                            SectionHeader:
+                                text: "Controls \u2014 Element Types"
+
+                            SubHeader:
+                                text: "Joystick"
+
+                            BodyText:
+                                text:
+                                    "Drag anywhere inside the circle; the knob follows your finger, clamped to the ring. Sends its command continuously while dragging. \"Self-Centering\" (toggle in the rebind dialog, on by default) controls what happens on release: ON snaps the knob back to center and sends (0, 0); OFF leaves the knob -- and the last-sent value -- wherever you released it, useful for a throttle-style control."
+
+                            CodeText:
+                                text: "Default command template:  JOY:{x},{y}"
+
+                            BodyText:
+                                text:
+                                    "x and y each range from -1.0 to 1.0 (2 decimal places), where (0, 0) is centered."
+
+                            SubHeader:
+                                text: "Action Button"
+
+                            BodyText:
+                                text: "Sends a fixed command once, on release."
+
+                            CodeText:
+                                text: "Default command template:  CMD:ARM"
+
+                            SubHeader:
+                                text: "Slider"
+
+                            BodyText:
+                                text:
+                                    "Sends its command every time the value changes while dragging. Min/max range is configurable per-slider in the rebind dialog (default 0-180, matching a typical servo angle)."
+
+                            CodeText:
+                                text: "Default command template:  SERVO:{val}"
+
+                            SubHeader:
+                                text: "Toggle Switch"
+
+                            BodyText:
+                                text: "Tap to flip on/off. Sends its command once per tap, with the new state."
+
+                            CodeText:
+                                text: "Default command template:  SW:{state}   (1 or 0)"
+
+                            SubHeader:
+                                text: "Label"
+
+                            BodyText:
+                                text:
+                                    "Free-form text only -- doesn't send anything. Useful for annotating a layout (e.g. naming a group of controls)."
+
+                            HelpDivider:
+
+                            SectionHeader:
+                                text: "Rebinding, Deleting, Saving"
+
+                            BodyText:
+                                text:
+                                    "Tap an element's pencil handle (edit mode) to open its rebind dialog: change its Input ID / Label, its command template, and any type-specific options (slider min/max, joystick self-centering). Command templates use Python's {curly-brace} formatting -- {x}, {y}, {val}, and {state} are filled in automatically depending on the element type; feel free to change the surrounding text (e.g. \"JOY:{x},{y}\" to \"J,{x},{y}\")."
+
+                            BodyText:
+                                text:
+                                    "The trash icon (either on the element itself, or DELETE in the rebind dialog) removes it from the canvas. Layouts are saved automatically -- use Export/Import (below) to share or back up a layout."
+
+                            HelpDivider:
+
+                            SectionHeader:
+                                text: "Export / Import Layout"
+
+                            BodyText:
+                                text:
+                                    "From the navigation drawer: Export Layout saves your current layout as a JSON file to a location you pick (Downloads, Drive, USB, etc.). Import Layout loads a previously exported file back in, replacing whatever's currently on the canvas. Handy for backing up a layout or sharing one between devices."
+
+                            HelpDivider:
+
+                            SectionHeader:
+                                text: "Serial Monitor"
+
+                            BodyText:
+                                text:
+                                    "The Serial Monitor screen works over Wi-Fi, or BLE -- whichever is currently connected. Type a command and press send; it's transmitted with the same CRLF framing as the controls. Incoming lines from the robot appear in the console below, prefixed [RX]."
+
+                            BodyText:
+                                text:
+                                    "This is the easiest way to test raw commands (like the ones above) directly, or to watch your ESP32's own debug output if it echoes status lines back."
+
+                            HelpDivider:
+
+                            SectionHeader:
+                                text: "Sketch \u2014 Command Parsing & Framing"
+
+                            BodyText:
+                                text:
+                                    "The ble_uart_echo.ino example sketch buffers incoming bytes until it sees a CR or LF, treats everything before that as one complete command, and echoes it straight back with a trailing CRLF -- a good starting point to verify the connection before wiring up real parsing."
+
+                            BodyText:
+                                text:
+                                    "For real commands, parse the prefix before the colon to decide what to do, then split the remainder on commas for multi-value commands like the joystick's:"
+
+                            CodeText:
+                                text:
+                                    "JOY:0.42,-0.87   -> prefix \"JOY\", values [0.42, -0.87]\nSERVO:135        -> prefix \"SERVO\", value 135\nSW:1             -> prefix \"SW\", value 1\nCMD:ARM          -> prefix \"CMD\", value \"ARM\""
+
+                            BodyText:
+                                text:
+                                    "Because every line ends in CRLF regardless of transport, the same parsing code can handle commands arriving over USB, Wi-Fi, or BLE without needing to know which one sent them."
+
+                            SubHeader:
+                                text: "A Generalized PREFIX:values Parser"
+
+                            BodyText:
+                                text:
+                                    "Every command template in this app follows the same shape: a prefix, a colon, then zero or more comma-separated values. One parser handles all of them -- split on the first colon, then split the remainder on commas into a small fixed-size array, and branch on the prefix:"
+
+                            CodeText:
+                                text:
+                                    "void handleCommand(String line) {\n  int sep = line.indexOf(':');\n  if (sep == -1) return;\n\n  String prefix = line.substring(0, sep);\n  String rest   = line.substring(sep + 1);\n\n  // Split rest on commas into up to 4 float values.\n  float vals[4];\n  int n = 0, start = 0;\n  while (n < 4) {\n    int comma = rest.indexOf(',', start);\n    String tok = comma == -1\n      ? rest.substring(start)\n      : rest.substring(start, comma);\n    vals[n++] = tok.toFloat();\n    if (comma == -1) break;\n    start = comma + 1;\n  }\n\n  if (prefix == \"JOY\" && n >= 2) {\n    driveMotors(vals[0], vals[1]);\n  } else if (prefix == \"SERVO\" && n >= 1) {\n    myServo.write((int)vals[0]);\n  } else if (prefix == \"SW\" && n >= 1) {\n    digitalWrite(RELAY_PIN, vals[0] != 0 ? HIGH : LOW);\n  } else if (prefix == \"CMD\") {\n    if (rest == \"ARM\") armRobot();\n  }\n}"
+
+                            BodyText:
+                                text:
+                                    "toFloat() returns 0 for a token it can't parse rather than raising an error, so a malformed value quietly becomes 0 instead of crashing the sketch -- worth keeping in mind, but usually fine for a hobby control loop. Add real validation here if a bad value driving a motor at 0 instead of rejecting the command outright would be a problem for your build."
+
+                            BodyText:
+                                text:
+                                    "Wire this into the framing from ble_uart_echo.ino: instead of echoing each buffered line back, call handleCommand(lineBuffer) on it. The same function works whether that buffer came from BLE, the WiFiService's TCP socket, or plain USB serial -- the parsing doesn't need to know which."
+
+                            Widget:
+                                size_hint_y: None
+                                height: dp(24)
+
+        MDNavigationDrawer:
+            id: nav_drawer
+            radius: (0, 16, 16, 0)
+            md_bg_color: 0.08, 0.08, 0.08, 1
+
+            MDBoxLayout:
+                orientation: 'vertical'
+                padding: [0, dp(16), 0, 0]
+                spacing: dp(8)
+
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    height: dp(60)
+                    padding: [dp(16), dp(8)]
+
+                    MDLabel:
+                        text: "Navigation"
+                        font_style: "H6"
+                        bold: True
+                        theme_text_color: "Custom"
+                        text_color: 0.83, 0.68, 0.21, 1
+
+                    MDSeparator:
+                        height: dp(1)
+                        color: 0.2, 0.2, 0.2, 1
+
+                ScrollView:
+                    MDList:
+                        OneLineIconListItem:
+                            text: "Home"
+                            text_color: 1, 1, 1, 1
+                            theme_text_color: "Custom"
+                            on_release: nav_drawer.set_state("close"); root.switch_screen("home")
+                            IconLeftWidget:
+                                icon: "home"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                                on_release: nav_drawer.set_state("close"); root.switch_screen("home")
+
+                        OneLineIconListItem:
+                            text: "Controls"
+                            text_color: 1, 1, 1, 1
+                            theme_text_color: "Custom"
+                            on_release: nav_drawer.set_state("close"); root.switch_screen("controls")
+                            IconLeftWidget:
+                                icon: "gamepad-variant"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                                on_release: nav_drawer.set_state("close"); root.switch_screen("controls")
+
+                        OneLineIconListItem:
+                            text: "Serial Monitor"
+                            text_color: 1, 1, 1, 1
+                            theme_text_color: "Custom"
+                            on_release: nav_drawer.set_state("close"); root.switch_screen("serial")
+                            IconLeftWidget:
+                                icon: "console-line"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                                on_release: nav_drawer.set_state("close"); root.switch_screen("serial")
+
+                        OneLineIconListItem:
+                            text: "Announcements"
+                            text_color: 1, 1, 1, 1
+                            theme_text_color: "Custom"
+                            on_release: nav_drawer.set_state("close"); root.switch_screen("announcements")
+                            IconLeftWidget:
+                                icon: "bullhorn"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                                on_release: nav_drawer.set_state("close"); root.switch_screen("announcements")
+
+                        OneLineIconListItem:
+                            text: "Help"
+                            text_color: 0.83, 0.68, 0.21, 1
+                            theme_text_color: "Custom"
+                            on_release: nav_drawer.set_state("close"); root.switch_screen("help")
+                            IconLeftWidget:
+                                icon: "help-circle"
+                                theme_text_color: "Custom"
+                                text_color: 0.83, 0.68, 0.21, 1
+                                on_release: nav_drawer.set_state("close"); root.switch_screen("help")
+
+                        OneLineIconListItem:
+                            text: "About"
+                            text_color: 1, 1, 1, 1
+                            theme_text_color: "Custom"
+                            on_release: nav_drawer.set_state("close"); root.switch_screen("about")
+                            IconLeftWidget:
+                                icon: "information"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                                on_release: nav_drawer.set_state("close"); root.switch_screen("about")

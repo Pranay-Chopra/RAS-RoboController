@@ -8,6 +8,7 @@ public class GattCallback extends BluetoothGattCallback {
     public interface Listener {
         void onConnectionStateChange(BluetoothGatt gatt, int status, int newState);
         void onServicesDiscovered(BluetoothGatt gatt, int status);
+        void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic);
     }
 
     private Listener listener;
@@ -24,5 +25,10 @@ public class GattCallback extends BluetoothGattCallback {
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
         if (listener != null) listener.onServicesDiscovered(gatt, status);
+    }
+
+    @Override
+    public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+        if (listener != null) listener.onCharacteristicChanged(gatt, characteristic);
     }
 }

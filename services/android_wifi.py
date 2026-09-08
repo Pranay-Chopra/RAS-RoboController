@@ -182,7 +182,7 @@ class AndroidWiFi:
                         self.handled = True
 
                         cls.clear_timeout()
-                        cls.disconnect()
+                        cls.release_network()
                         if on_result:
                             Clock.schedule_once(lambda dt: on_result(False), 0)
 
@@ -202,7 +202,7 @@ class AndroidWiFi:
                     if cls._active_listener and not cls._active_listener.handled:
                         cls._active_listener.handled = True
                         print("[AndroidWiFi] Connection user prompt timed out.")
-                        cls.disconnect()
+                        cls.release_network()
                         if on_result:
                             on_result(False)
 

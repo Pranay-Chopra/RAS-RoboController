@@ -1,105 +1,79 @@
-<HomeScreen>:
+<HUDControlsScreen>:
     MDNavigationLayout:
+		ScreenManager:
+	        MDScreen:
+	            # Root FloatLayout to stack HUD Canvas below Top Bar
+	            MDFloatLayout:
+	                md_bg_color: 0.05, 0.05, 0.05, 1
 
-        ScreenManager:
-            MDScreen:
-                MDBoxLayout:
-                    orientation: 'vertical'
+	                # 1. Canvas Layer (Bottom Layer)
+	                MDFloatLayout:
+	                    id: hud_canvas
+	                    size_hint: 1, 1
+	                    pos_hint: {"x": 0, "y": 0}
 
-                    MDFloatLayout:
-                        id: top_bar
-                        size_hint_y: None
-                        height: dp(56)
-                        md_bg_color: 0.08, 0.08, 0.08, 1
+	                # 2. Top Action Bar (Top Layer - Always visible!)
+	                MDBoxLayout:
+	                    orientation: "horizontal"
+	                    size_hint: 1, None
+	                    height: "56dp"
+	                    pos_hint: {"top": 1}
+	                    padding: ["12dp", "4dp"]
+	                    spacing: "8dp"
+	                    md_bg_color: 0.08, 0.08, 0.08, 0.95
 
-                        MDIconButton:
-                            icon: "menu"
-                            theme_text_color: "Custom"
-                            text_color: 0.83, 0.68, 0.21, 1
-                            pos_hint: {"center_y": 0.5}
-                            x: dp(8)
-                            on_release: nav_drawer.set_state("toggle")
+	                    # Hamburger Menu
+	                    MDIconButton:
+	                        icon: "menu"
+	                        theme_text_color: "Custom"
+	                        text_color: 0.83, 0.68, 0.21, 1
+	                        on_release: nav_drawer.set_state("toggle")
 
-                        MDLabel:
-                            text: "RoboController"
-                            font_style: "H6"
-                            bold: True
-                            halign: "center"
-                            theme_text_color: "Custom"
-                            text_color: 0.83, 0.68, 0.21, 1
-                            size_hint: 1, None
-                            size: self.texture_size
-                            pos_hint: {"center_x": 0.5, "center_y": 0.5}
 
-                        MDIconButton:
-                            icon: "cog"
-                            theme_text_color: "Custom"
-                            text_color: 0.83, 0.68, 0.21, 1
-                            pos_hint: {"center_y": 0.5}
-                            right: top_bar.width - dp(8)
-                            on_release: root.switch_screen("settings")
 
-                    MDBoxLayout:
-                        orientation: 'vertical'
-                        padding: dp(16)
-                        spacing: dp(16)
+	                    Widget:
+	                        size_hint_x: .5
 
-                        # Status Card
-                        MDCard:
-                            orientation: 'vertical'
-                            padding: dp(24)
-                            spacing: dp(16)
-                            size_hint: 1, None
-                            height: dp(260)
-                            pos_hint: {'center_x': 0.5}
-                            radius: [dp(16)]
-                            md_bg_color: 0.12, 0.12, 0.12, 1
-                            elevation: 2
+						MDLabel:
+	                        text: "Controls"
+	                        font_style: "H6"
+	                        bold: True
+	                        halign: "center"
+	                        theme_text_color: "Custom"
+	                        text_color: 0.83, 0.68, 0.21, 1
 
-                            AnchorLayout:
-                                anchor_x: 'center'
-                                anchor_y: 'center'
-                                size_hint_y: None
-                                height: dp(64)
+						Widget:
+	                        size_hint_x: .5
 
-                                MDIcon:
-                                    icon: root.status_icon
-                                    font_size: dp(56)
-                                    theme_text_color: "Custom"
-                                    # Color changes based on connection status: Gold if connected/scanning, Red if off
-                                    text_color: (0.83, 0.68, 0.21, 1) if root.connected or root.scanning else (0.9, 0.3, 0.2, 1)
+	                    # EDIT / PLAY Toggle Mode Button
+	                    MDRaisedButton:
+	                        text: "PLAY" if root.is_edit_mode else "EDIT"
+	                        md_bg_color: (0.83, 0.68, 0.21, 1) if not root.is_edit_mode else (0.8, 0.2, 0.2, 1)
+	                        text_color: (0, 0, 0, 1) if not root.is_edit_mode else (1, 1, 1, 1)
+	                        on_release: root.toggle_edit_mode()
+							pos_hint: {"center_y": 0.5}
 
-                            MDLabel:
-                                text: root.connection_status
-                                font_style: "H5"
-                                bold: True
-                                halign: "center"
-                                theme_text_color: "Custom"
-                                text_color: 0.85, 0.85, 0.85, 1
-                                size_hint_y: None
-                                height: dp(36)
 
-                            AnchorLayout:
-                                anchor_x: 'center'
-                                anchor_y: 'center'
-                                size_hint_y: None
-                                height: dp(50)
+	                    # Add Element Dropdown
+	                    MDIconButton:
+	                        icon: "plus-box"
+	                        theme_text_color: "Custom"
+	                        text_color: 0.83, 0.68, 0.21, 1
+	                        disabled: not root.is_edit_mode
+	                        on_release: root.open_add_widget_menu(self)
 
-                                MDRaisedButton:
-                                    text: "DISCONNECT" if root.connected else "SCAN FOR DEVICES"
-                                    font_size: dp(15)
-                                    bold: True
-                                    elevation: 0
-                                    md_bg_color: (0.9, 0.3, 0.2, 1) if root.connected else (0.83, 0.68, 0.21, 1)
-                                    text_color: 0, 0, 0, 1
-                                    padding: [dp(24), dp(12)]
-                                    on_release: root.disconnect() if root.connected else root.scan()
+	                    # Save Layout
+	                    # MDIconButton:
+	                        # icon: "content-save"
+	                        # theme_text_color: "Custom"
+	                        # text_color: 0.83, 0.68, 0.21, 1
+	                        # disabled: not root.is_edit_mode
+	                        # on_release: root.save_layout()
 
-                        # Scanned Devices List (This was missing)
-                        ScrollView:
-                            MDList:
-                                id: robot_container
 
+
+
+        # 2. Second Required Child: MDNavigationDrawer
         MDNavigationDrawer:
             id: nav_drawer
             radius: (0, 16, 16, 0)
@@ -131,24 +105,24 @@
                     MDList:
                         OneLineIconListItem:
                             text: "Home"
-                            text_color: 0.83, 0.68, 0.21, 1
+                            text_color: 1, 1, 1, 1
                             theme_text_color: "Custom"
                             on_release: nav_drawer.set_state("close"); root.switch_screen("home")
                             IconLeftWidget:
                                 icon: "home"
                                 theme_text_color: "Custom"
-                                text_color: 0.83, 0.68, 0.21, 1
+                                text_color: 1, 1, 1, 1
                                 on_release: nav_drawer.set_state("close"); root.switch_screen("home")
 
                         OneLineIconListItem:
                             text: "Controls"
-                            text_color: 1, 1, 1, 1
+                            text_color: 0.83, 0.68, 0.21, 1
                             theme_text_color: "Custom"
                             on_release: nav_drawer.set_state("close"); root.switch_screen("controls")
                             IconLeftWidget:
                                 icon: "gamepad-variant"
                                 theme_text_color: "Custom"
-                                text_color: 1, 1, 1, 1
+                                text_color: 0.83, 0.68, 0.21, 1
                                 on_release: nav_drawer.set_state("close"); root.switch_screen("controls")
 
 
@@ -207,3 +181,33 @@
                                 theme_text_color: "Custom"
                                 text_color: 1, 1, 1, 1
                                 on_release: nav_drawer.set_state("close"); root.switch_screen("about")
+
+
+                        MDSeparator:
+                            height: dp(1)
+                            color: 0.2, 0.2, 0.2, 1
+
+                        Widget:
+                        	size_hint_y: 1
+
+                        OneLineIconListItem:
+                            text: "Export Layout"
+                            text_color: 1, 1, 1, 1
+                            theme_text_color: "Custom"
+                            on_release: nav_drawer.set_state("close"); root.export_layout()
+                            IconLeftWidget:
+                                icon: "export"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                                on_release: nav_drawer.set_state("close"); root.export_layout()
+
+                        OneLineIconListItem:
+                            text: "Import Layout"
+                            text_color: 1, 1, 1, 1
+                            theme_text_color: "Custom"
+                            on_release: nav_drawer.set_state("close"); root.import_layout()
+                            IconLeftWidget:
+                                icon: "import"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                                on_release: nav_drawer.set_state("close"); root.import_layout()

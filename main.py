@@ -17,6 +17,13 @@ try:
 except Exception as e:
     print(f"[BLE] Failed to pre-load GattCallback: {e}")
 
+from kivy.core.window import Window
+
+# Options: 'below_target' (scrolls/pans focused widget above keyboard)
+#          'pan' (pans the whole root window up)
+#          'resize' (resizes the window layout height)
+Window.softinput_mode = "below_target"
+
 from app import RoboController
 
 if __name__ == "__main__":

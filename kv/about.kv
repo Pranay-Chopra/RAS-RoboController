@@ -1,217 +1,598 @@
-<AboutScreen>:
+#:kivy 2.0
 
+<PersonCard@MDCard>:
+    photo_url: ""
+    person_name: ""
+    person_role: ""
+    linkedin_url: ""
+    instagram_url: ""
+    email_address: ""
+
+    orientation: 'vertical'
+    padding: dp(16)
+    spacing: dp(6)
+    size_hint: 1, None
+    height: dp(240)
+    radius: [dp(16)]
+    md_bg_color: 0.12, 0.12, 0.12, 1
+    elevation: 2
+
+    AnchorLayout:
+        anchor_x: 'center'
+        anchor_y: 'center'
+        size_hint_y: None
+        height: dp(88)
+
+        CircularImage:
+            source: root.photo_url
+            size_hint: None, None
+            size: dp(84), dp(84)
+
+    MDLabel:
+        text: root.person_name
+        font_style: "Subtitle1"
+        bold: True
+        halign: "center"
+        theme_text_color: "Custom"
+        text_color: 1, 1, 1, 1
+        size_hint_y: None
+        height: dp(24)
+        text_size: self.width, None
+
+    MDLabel:
+        text: root.person_role
+        font_style: "Caption"
+        halign: "center"
+        theme_text_color: "Custom"
+        text_color: 0.83, 0.68, 0.21, 1
+        size_hint_y: None
+        height: dp(18)
+        text_size: self.width, None
+
+    AnchorLayout:
+        anchor_x: 'center'
+        size_hint_y: None
+        height: dp(44)
+
+        MDBoxLayout:
+            orientation: 'horizontal'
+            size_hint: None, None
+            size: self.minimum_width, dp(44)
+            spacing: dp(20)
+
+            MDIconButton:
+                icon: "linkedin"
+                theme_text_color: "Custom"
+                text_color: 0.83, 0.68, 0.21, 1
+                opacity: 1 if root.linkedin_url else 0
+                disabled: not root.linkedin_url
+                on_release: app.open_link(root.linkedin_url)
+
+            MDIconButton:
+                icon: "instagram"
+                theme_text_color: "Custom"
+                text_color: 0.83, 0.68, 0.21, 1
+                opacity: 1 if root.instagram_url else 0
+                disabled: not root.instagram_url
+                on_release: app.open_link(root.instagram_url)
+
+            MDIconButton:
+                icon: "email-outline"
+                theme_text_color: "Custom"
+                text_color: 0.83, 0.68, 0.21, 1
+                opacity: 1 if root.email_address else 0
+                disabled: not root.email_address
+                on_release: app.open_link("mailto:" + root.email_address)
+
+
+<FeatureBlock@MDBoxLayout>:
+    feature_icon: "robot"
+    feature_title: ""
+    feature_desc: ""
+
+    orientation: 'vertical'
+    padding: dp(8)
+    spacing: dp(4)
+
+    MDIcon:
+        icon: root.feature_icon
+        halign: 'center'
+        theme_text_color: "Custom"
+        text_color: 0.83, 0.68, 0.21, 1
+        font_size: dp(30)
+        size_hint_y: None
+        height: dp(34)
+        text_size: self.width, None
+        pos_hint: {"center_x": 0.5}
+
+    MDLabel:
+        text: root.feature_title
+        font_style: "Caption"
+        bold: True
+        halign: 'center'
+        theme_text_color: "Custom"
+        text_color: 1, 1, 1, 1
+        size_hint_y: None
+        height: dp(18)
+        text_size: self.width, None
+
+    MDLabel:
+        text: root.feature_desc
+        font_style: "Caption"
+        halign: 'center'
+        theme_text_color: "Custom"
+        text_color: 0.62, 0.62, 0.62, 1
+        text_size: self.width, None
+
+
+
+<AboutScreen>:
     MDNavigationLayout:
 
-        # Main Screen Content
-        MDScreenManager:
-
+        ScreenManager:
             MDScreen:
-
                 MDBoxLayout:
-                    orientation: "vertical"
-                    md_bg_color: "#0D0D0D"
+                    orientation: 'vertical'
 
-                    # Top Bar with Hamburger Menu
-                    MDTopAppBar:
-                        type: "small"
-                        headline_text: "About"
-                        md_bg_color: "#0D0D0D"
-                        specific_text_color: "#D4AF37"
+                    MDFloatLayout:
+                        id: top_bar
+                        size_hint_y: None
+                        height: dp(56)
+                        md_bg_color: 0.08, 0.08, 0.08, 1
 
-                        MDTopAppBarLeadingButtonContainer:
+                        MDIconButton:
+                            icon: "menu"
+                            theme_text_color: "Custom"
+                            text_color: 0.83, 0.68, 0.21, 1
+                            pos_hint: {"center_y": 0.5}
+                            x: dp(8)
+                            on_release: nav_drawer.set_state("toggle")
 
-                            MDActionTopAppBarButton:
-                                icon: "menu"
-                                theme_icon_color: "Custom"
-                                icon_color: "#D4AF37"
-                                on_release: nav_drawer.set_state("toggle")
+                        MDLabel:
+                            text: "About"
+                            font_style: "H6"
+                            bold: True
+                            halign: "center"
+                            theme_text_color: "Custom"
+                            text_color: 0.83, 0.68, 0.21, 1
+                            size_hint: 1, None
+                            size: self.texture_size
+                            pos_hint: {"center_x": 0.5, "center_y": 0.5}
 
-                    # Main Content Area
-                    MDScrollView:
+
+
+                    ScrollView:
                         do_scroll_x: False
-                        do_scroll_y: True
 
                         MDBoxLayout:
-                            orientation: "vertical"
-                            spacing: "20dp"
-                            padding: "25dp"
+                            orientation: 'vertical'
+                            padding: dp(16)
+                            spacing: dp(16)
                             size_hint_y: None
                             height: self.minimum_height
 
-                            # App Info Card
                             MDCard:
-                                style: "filled"
-                                md_bg_color: "#161616"
-                                radius: [20]
-                                padding: "20dp"
-                                size_hint_y: None
-                                height: "200dp"
-                                orientation: "vertical"
-                                spacing: "10dp"
+                                orientation: 'vertical'
+                                padding: dp(20)
+                                spacing: dp(10)
+                                size_hint: 1, None
+                                height: dp(230)
+                                radius: [dp(16)]
+                                md_bg_color: 0.12, 0.12, 0.12, 1
+                                elevation: 2
 
-                                MDIcon:
-                                    icon: "robot"
-                                    theme_icon_color: "Custom"
-                                    icon_color: "#D4AF37"
-                                    halign: "center"
-                                    font_size: "56sp"
+                                AnchorLayout:
+                                    anchor_x: 'center'
+                                    anchor_y: 'center'
+                                    size_hint_y: None
+                                    height: dp(64)
 
-                                MDLabel:
-                                    text: "ESP32 Controller"
-                                    halign: "center"
-                                    font_style: "Headline"
-                                    role: "small"
-                                    theme_text_color: "Custom"
-                                    text_color: "#FFFFFF"
+                                    Image:
+                                        source: "assets/icons/presplash.png"
+                                        size_hint: None, None
+                                        size: dp(64), dp(64)
+                                        allow_stretch: True
+                                        keep_ratio: True
 
                                 MDLabel:
-                                    text: "Version 1.0.0"
+                                    text: "IEEE RAS SBC"
+                                    font_style: "H6"
+                                    bold: True
                                     halign: "center"
-                                    font_style: "Body"
-                                    role: "medium"
                                     theme_text_color: "Custom"
-                                    text_color: "#888888"
+                                    text_color: 1, 1, 1, 1
+                                    size_hint_y: None
+                                    height: dp(28)
+                                    text_size: self.width, None
 
-                            # Project / Details Card
+                                MDLabel:
+                                    text: "Robotics & Automation Society \u2014 Student Branch Chapter, LNMIIT"
+                                    font_style: "Caption"
+                                    halign: "center"
+                                    theme_text_color: "Custom"
+                                    text_color: 0.6, 0.6, 0.6, 1
+                                    size_hint_y: None
+                                    height: dp(32)
+                                    text_size: self.width, None
+
+                                MDLabel:
+                                    text: "\"We build the machines that build the future.\""
+                                    font_style: "Body2"
+                                    halign: "center"
+                                    theme_text_color: "Custom"
+                                    text_color: 0.83, 0.68, 0.21, 1
+                                    size_hint_y: None
+                                    height: dp(40)
+                                    text_size: self.width, None
+
+
                             MDCard:
-                                style: "filled"
-                                md_bg_color: "#161616"
-                                radius: [20]
-                                padding: "20dp"
+                                orientation: 'vertical'
+                                padding: dp(20)
+                                spacing: dp(10)
+                                size_hint: 1, None
+                                height: dp(420)
+                                radius: [dp(16)]
+                                md_bg_color: 0.12, 0.12, 0.12, 1
+                                elevation: 2
+
+                                MDLabel:
+                                    text: "Two acronyms, one mission"
+                                    font_style: "Subtitle1"
+                                    bold: True
+                                    theme_text_color: "Custom"
+                                    text_color: 0.83, 0.68, 0.21, 1
+                                    size_hint_y: None
+                                    height: dp(26)
+
+
+
+                                MDLabel:
+                                    text: "IEEE"
+                                    bold: True
+                                    font_style: "Body1"
+                                    theme_text_color: "Custom"
+                                    text_color: 1, 1, 1, 1
+                                    size_hint_y: None
+                                    height: dp(22)
+
+                                MDLabel:
+                                    text: "The world's largest technical professional organization, advancing technology for humanity through publications, conferences, and a global network of students and professionals across every engineering discipline."
+                                    font_style: "Caption"
+                                    theme_text_color: "Custom"
+                                    text_color: 0.75, 0.75, 0.75, 1
+                                    size_hint_y: None
+                                    height: dp(64)
+                                    text_size: self.width, None
+
+                                Widget:
+                                	size_hint_y: .1
+
+                                MDLabel:
+                                    text: "RAS"
+                                    bold: True
+                                    font_style: "Body1"
+                                    theme_text_color: "Custom"
+                                    text_color: 1, 1, 1, 1
+                                    size_hint_y: None
+                                    height: dp(22)
+
+                                MDLabel:
+                                    text: "IEEE's dedicated society for robotics, spanning manipulation, mobile robots, automation, and AI-driven systems -- connecting members through flagship conferences like ICRA and IROS, technical committees, and a worldwide chapter network."
+                                    font_style: "Caption"
+                                    theme_text_color: "Custom"
+                                    text_color: 0.75, 0.75, 0.75, 1
+                                    size_hint_y: None
+                                    height: dp(64)
+                                    text_size: self.width, None
+
+                                Widget:
+                                	size_hint_y: .1
+
+                                MDLabel:
+                                    text: "Our Student Branch Chapter"
+                                    bold: True
+                                    font_style: "Body1"
+                                    theme_text_color: "Custom"
+                                    text_color: 1, 1, 1, 1
+                                    size_hint_y: None
+                                    height: dp(22)
+
+                                MDLabel:
+                                    text: "Hands-on build sessions, beginner-to-advanced workshops, and inter-college competitions -- and a direct line into RAS's international programs, from Distinguished Lecturer talks to student travel grants for conferences."
+                                    font_style: "Caption"
+                                    theme_text_color: "Custom"
+                                    text_color: 0.75, 0.75, 0.75, 1
+                                    size_hint_y: None
+                                    height: dp(64)
+                                    text_size: self.width, None
+
+
+
+                            MDCard:
+                                padding: dp(12)
+                                size_hint: 1, None
+                                height: dp(220)
+                                radius: [dp(16)]
+                                md_bg_color: 0.12, 0.12, 0.12, 1
+                                elevation: 2
+
+                                MDGridLayout:
+                                    cols: 2
+                                    spacing: dp(8)
+
+                                    FeatureBlock:
+                                        feature_icon: "hammer-wrench"
+                                        feature_title: "Hands-on Builds"
+                                        feature_desc: "Bots, arms, and embedded projects from scratch."
+
+                                    FeatureBlock:
+                                        feature_icon: "school-outline"
+                                        feature_title: "Workshops & Talks"
+                                        feature_desc: "From first circuits to ROS and control theory."
+
+                                    FeatureBlock:
+                                        feature_icon: "trophy-outline"
+                                        feature_title: "Competitions"
+                                        feature_desc: "Inter-college challenges and hackathons."
+
+                                    FeatureBlock:
+                                        feature_icon: "earth"
+                                        feature_title: "Global RAS Network"
+                                        feature_desc: "Direct access to IEEE RAS's international community."
+
+                            MDLabel:
+                                text: "Faculty Mentor"
+                                font_style: "Subtitle1"
+                                bold: True
+                                theme_text_color: "Custom"
+                                text_color: 0.83, 0.68, 0.21, 1
                                 size_hint_y: None
-                                height: "180dp"
-                                orientation: "vertical"
-                                spacing: "10dp"
+                                height: dp(28)
+
+                            PersonCard:
+                                photo_url: "assets/images/gaurav_chatterjee.jpg"
+                                person_name: "Dr. Gaurav Chatterjee"
+                                person_role: "Faculty Mentor"
+                                linkedin_url: "https://www.linkedin.com/in/gchatterji"
+                                email_address: "gaurav.chatterjee@lnmiit.ac.in"
+
+                            MDLabel:
+                                text: "Governing Council"
+                                font_style: "Subtitle1"
+                                bold: True
+                                theme_text_color: "Custom"
+                                text_color: 0.83, 0.68, 0.21, 1
+                                size_hint_y: None
+                                height: dp(28)
+
+                            PersonCard:
+                                photo_url: "assets/images/vibhor_katara.jpeg"
+                                person_name: "Vibhor Katara"
+                                person_role: "Chairman"
+                                linkedin_url: "https://www.linkedin.com/in/vibhor-katara"
+                                instagram_url: "https://www.instagram.com/vblade369"
+                                email_address: "24uec199@lnmiit.ac.in"
+
+                            PersonCard:
+                                photo_url: "assets/images/jayant_chopra.jpeg"
+                                person_name: "Jayant Chopra"
+                                person_role: "Vice Chairperson"
+                                linkedin_url: "https://www.linkedin.com/in/jayantchopra"
+                                instagram_url: "https://www.instagram.com/tanjiro_1819"
+                                email_address: "24uec114@lnmiit.ac.in"
+
+                            PersonCard:
+                                photo_url: "assets/images/devansh_maheshwari.jpeg"
+                                person_name: "Devansh Maheshvari"
+                                person_role: "Secretary"
+                                linkedin_url: "https://www.linkedin.com/in/hxxdhenry"
+                                instagram_url: "https://www.instagram.com/hxxdhenry"
+                                email_address: "24dec033@lnmiit.ac.in"
+
+                            PersonCard:
+                                photo_url: "https://ui-avatars.com/api/?name=Aviral+Goyal&background=0B1220&color=FFB300&size=300&bold=true&font-size=0.33&rounded=true"
+                                person_name: "Aviral Goyal"
+                                person_role: "Treasurer"
+                                linkedin_url: "https://www.linkedin.com/in/aviral-goyal-739370368"
+                                instagram_url: "https://www.instagram.com/qwerty_.1718"
+                                email_address: "24UEC242@lnmiit.ac.in"
+
+                            PersonCard:
+                                photo_url: "https://ui-avatars.com/api/?name=Aditya+Jindal&background=0B1220&color=FFB300&size=300&bold=true&font-size=0.33&rounded=true"
+                                person_name: "Aditya Jindal"
+                                person_role: "Web Master"
+                                linkedin_url: "https://www.linkedin.com/in/aditya-jindal-510838276"
+                                instagram_url: "https://www.instagram.com/jindal_aditya07"
+                                email_address: "24uec091@lnmiit.ac.in"
+
+                            MDLabel:
+                                text: "Built By"
+                                font_style: "Subtitle1"
+                                bold: True
+                                theme_text_color: "Custom"
+                                text_color: 0.83, 0.68, 0.21, 1
+                                size_hint_y: None
+                                height: dp(28)
+
+                            PersonCard:
+                                photo_url: "assets/images/pranay_chopra.jpeg"
+                                person_name: "Pranay Chopra"
+                                person_role: "Developer"
+                                linkedin_url: "https://www.linkedin.com/in/pranay-chopra-9462b3382"
+                                instagram_url: "https://www.instagram.com/pradevhunter"
+                                email_address: "25ucc115@lnmiit.ac.in"
+
+                            PersonCard:
+                                photo_url: "assets/images/ojasva_koolwal.jpeg"
+                                person_name: "Ojasva Koolwal"
+                                person_role: "Developer"
+                                linkedin_url: "https://www.linkedin.com/in/ojasva-koolwal-64380b36b"
+                                instagram_url: "https://www.instagram.com/ojasava_k"
+                                email_address: "25ucs206@lnmiit.ac.in"
+
+                            MDCard:
+                                orientation: 'vertical'
+                                padding: dp(16)
+                                spacing: dp(10)
+                                size_hint: 1, None
+                                height: dp(360)
+                                radius: [dp(16)]
+                                md_bg_color: 0.12, 0.12, 0.12, 1
+                                elevation: 2
+
+                                MDBoxLayout:
+                                    orientation: 'horizontal'
+                                    size_hint_y: None
+                                    height: dp(36)
+                                    spacing: dp(4)
+
+                                    MDLabel:
+                                        text: "Application Logs"
+                                        font_style: "Subtitle1"
+                                        bold: True
+                                        theme_text_color: "Custom"
+                                        text_color: 0.83, 0.68, 0.21, 1
+
+                                    MDIconButton:
+                                        icon: "refresh"
+                                        theme_text_color: "Custom"
+                                        text_color: 0.83, 0.68, 0.21, 1
+                                        on_release: root.refresh_logs()
+
+                                    MDIconButton:
+                                        icon: "export"
+                                        theme_text_color: "Custom"
+                                        text_color: 0.83, 0.68, 0.21, 1
+                                        on_release: root.export_logs()
+
+                                    MDIconButton:
+                                        icon: "delete-outline"
+                                        theme_text_color: "Custom"
+                                        text_color: 0.9, 0.3, 0.2, 1
+                                        on_release: root.clear_logs()
 
                                 MDLabel:
-                                    text: "System Information"
-                                    font_style: "Title"
-                                    role: "medium"
+                                    text: "Shows the most recent lines. Export saves the full session log as a text file."
+                                    font_style: "Caption"
                                     theme_text_color: "Custom"
-                                    text_color: "#D4AF37"
+                                    text_color: 0.55, 0.55, 0.55, 1
+                                    size_hint_y: None
+                                    height: self.texture_size[1]
 
-                                MDLabel:
-                                    text: "Control and monitor ESP32 hardware over Wi-Fi and BLE.\nFeatures real-time connection status, camera stream, and serial terminal control."
-                                    font_style: "Body"
-                                    role: "medium"
-                                    theme_text_color: "Custom"
-                                    text_color: "#CCCCCC"
+                                ScrollView:
+                                    do_scroll_x: False
 
+                                    MDBoxLayout:
+                                        id: log_container
+                                        orientation: "vertical"
+                                        size_hint_y: None
+                                        height: self.minimum_height
 
-        # Navigation Drawer Panel
         MDNavigationDrawer:
             id: nav_drawer
             radius: (0, 16, 16, 0)
-            md_bg_color: "#0D0D0D"
+            md_bg_color: 0.08, 0.08, 0.08, 1
 
-            MDNavigationDrawerMenu:
+            MDBoxLayout:
+                orientation: 'vertical'
+                padding: [0, dp(16), 0, 0]
+                spacing: dp(8)
 
-                MDNavigationDrawerHeader:
-                    title: "Navigation"
-                    title_color: "#D4AF37"
-                    spacing: "4dp"
-                    padding: "12dp", "0dp", "0dp", "8dp"
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    height: dp(60)
+                    padding: [dp(16), dp(8)]
 
-                MDNavigationDrawerItem:
-                    active: False
-                    active_indicator_color: (0, 0, 0, 0)
-                    inactive_indicator_color: (0, 0, 0, 0)
-                    focus_color: (0, 0, 0, 0)
-                    ripple_color: (0, 0, 0, 0)
-                    on_release:
-                        nav_drawer.set_state("close")
-                        root.switch_screen("home")
-
-                    MDIcon:
-                        icon: "home"
-                        theme_icon_color: "Custom"
-                        icon_color: "#D4AF37"
-                        pos_hint: {"center_y": .5}
-
-                    MDNavigationDrawerItemText:
-                        text: "Home"
+                    MDLabel:
+                        text: "Navigation"
+                        font_style: "H6"
+                        bold: True
                         theme_text_color: "Custom"
-                        text_color: "#FFFFFF"
+                        text_color: 0.83, 0.68, 0.21, 1
 
-                MDNavigationDrawerItem:
-                    active: False
-                    active_indicator_color: (0, 0, 0, 0)
-                    inactive_indicator_color: (0, 0, 0, 0)
-                    focus_color: (0, 0, 0, 0)
-                    ripple_color: (0, 0, 0, 0)
-                    on_release:
-                        nav_drawer.set_state("close")
-                        root.switch_screen("controls")
+                    MDSeparator:
+                        height: dp(1)
+                        color: 0.2, 0.2, 0.2, 1
 
-                    MDIcon:
-                        icon: "controller"
-                        theme_icon_color: "Custom"
-                        icon_color: "#D4AF37"
-                        pos_hint: {"center_y": .5}
+                ScrollView:
+                    MDList:
+                        OneLineIconListItem:
+                            text: "Home"
+                            text_color: 1, 1, 1, 1
+                            theme_text_color: "Custom"
+                            on_release: nav_drawer.set_state("close"); root.manager.current = "home"
+                            IconLeftWidget:
+                                icon: "home"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                                on_release: nav_drawer.set_state("close"); root.manager.current = "home"
 
-                    MDNavigationDrawerItemText:
-                        text: "Controls"
-                        theme_text_color: "Custom"
-                        text_color: "#FFFFFF"
+                        OneLineIconListItem:
+                            text: "Controls"
+                            text_color: 1, 1, 1, 1
+                            theme_text_color: "Custom"
+                            on_release: nav_drawer.set_state("close"); root.manager.current = "controls"
+                            IconLeftWidget:
+                                icon: "gamepad-variant"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                                on_release: nav_drawer.set_state("close"); root.manager.current = "controls"
 
-                MDNavigationDrawerItem:
-                    active: False
-                    active_indicator_color: (0, 0, 0, 0)
-                    inactive_indicator_color: (0, 0, 0, 0)
-                    focus_color: (0, 0, 0, 0)
-                    ripple_color: (0, 0, 0, 0)
-                    on_release:
-                        nav_drawer.set_state("close")
-                        root.switch_screen("camera")
 
-                    MDIcon:
-                        icon: "camera"
-                        theme_icon_color: "Custom"
-                        icon_color: "#D4AF37"
-                        pos_hint: {"center_y": .5}
 
-                    MDNavigationDrawerItemText:
-                        text: "Camera Stream"
-                        theme_text_color: "Custom"
-                        text_color: "#FFFFFF"
+                        OneLineIconListItem:
+                            text: "Serial Monitor"
+                            text_color: 1, 1, 1, 1
+                            theme_text_color: "Custom"
+                            on_release: nav_drawer.set_state("close"); root.manager.current = "serial"
+                            IconLeftWidget:
+                                icon: "console-line"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                                on_release: nav_drawer.set_state("close"); root.manager.current = "serial"
 
-                MDNavigationDrawerItem:
-                    active: False
-                    active_indicator_color: (0, 0, 0, 0)
-                    inactive_indicator_color: (0, 0, 0, 0)
-                    focus_color: (0, 0, 0, 0)
-                    ripple_color: (0, 0, 0, 0)
-                    on_release:
-                        nav_drawer.set_state("close")
-                        root.switch_screen("serial")
+						OneLineIconListItem:
+                            text: "Announcements"
+                            text_color: 1, 1, 1, 1
+                            theme_text_color: "Custom"
+                            on_release: nav_drawer.set_state("close"); root.switch_screen("announcements")
+                            IconLeftWidget:
+                                icon: "bullhorn"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                                on_release: nav_drawer.set_state("close"); root.switch_screen("announcements")
 
-                    MDIcon:
-                        icon: "console"
-                        theme_icon_color: "Custom"
-                        icon_color: "#D4AF37"
-                        pos_hint: {"center_y": .5}
+                        OneLineIconListItem:
+                            text: "Quiz"
+                            text_color: 1, 1, 1, 1
+                            theme_text_color: "Custom"
+                            on_release: nav_drawer.set_state("close"); root.switch_screen("quiz")
+                            IconLeftWidget:
+                                icon: "clipboard-list-outline"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                                on_release: nav_drawer.set_state("close"); root.switch_screen("quiz")
 
-                    MDNavigationDrawerItemText:
-                        text: "Serial Monitor"
-                        theme_text_color: "Custom"
-                        text_color: "#FFFFFF"
+                        OneLineIconListItem:
+                            text: "Help"
+                            text_color: 1, 1, 1, 1
+                            theme_text_color: "Custom"
+                            on_release: nav_drawer.set_state("close"); root.switch_screen("help")
+                            IconLeftWidget:
+                                icon: "help-circle"
+                                theme_text_color: "Custom"
+                                text_color: 1, 1, 1, 1
+                                on_release: nav_drawer.set_state("close"); root.switch_screen("help")
 
-                MDNavigationDrawerItem:
-                    active: True
-                    active_indicator_color: (0.83, 0.68, 0.21, 0.15)
-                    inactive_indicator_color: (0.83, 0.68, 0.21, 0.15)
-                    focus_color: (0.83, 0.68, 0.21, 0.15)
-                    ripple_color: (0.83, 0.68, 0.21, 0.15)
-                    on_release:
-                        nav_drawer.set_state("close")
-
-                    MDIcon:
-                        icon: "information"
-                        theme_icon_color: "Custom"
-                        icon_color: "#D4AF37"
-                        pos_hint: {"center_y": .5}
-
-                    MDNavigationDrawerItemText:
-                        text: "About"
-                        theme_text_color: "Custom"
-                        text_color: "#FFFFFF"
+                        OneLineIconListItem:
+                            text: "About"
+                            text_color: 0.83, 0.68, 0.21, 1
+                            theme_text_color: "Custom"
+                            on_release: nav_drawer.set_state("close"); root.manager.current = "about"
+                            IconLeftWidget:
+                                icon: "information"
+                                theme_text_color: "Custom"
+                                text_color: 0.83, 0.68, 0.21, 1
+                                on_release: nav_drawer.set_state("close"); root.manager.current = "about"
