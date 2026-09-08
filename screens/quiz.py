@@ -1,3 +1,4 @@
+from kivy.clock import Clock
 from kivy.core.text import LabelBase
 from kivy.metrics import dp
 from kivy.properties import BooleanProperty
@@ -20,6 +21,11 @@ from services.quiz_api import QuizAPI
 from dialogs.quiz_dialogs import PostProblemDialog
 
 GOLD = (0.83, 0.68, 0.21, 1)
+
+# Per-question answer window. Each unanswered question card counts down
+# from this the moment the quiz renders; at zero it locks with whatever
+# is selected (nothing -> recorded as a wrong no-answer).
+ANSWER_SECONDS = 15
 
 # Roboto (KivyMD's default) has no glyph for the result marks U+2713 / U+2A2F
 # -- they render as tofu. DejaVuSans (shipped with Kivy) has both.
@@ -175,6 +181,9 @@ class QuizScreen(MDScreen):
         self._answers = {}
         self._pending_ids = []
         self._busy = False
+        self._q_timers = []          # live Clock events, one per pending card
+        self._expired = set()        # pids whose 15s window has closed
+        self._submitting = False
         # Content area: "plain" is a single scroll (sign-in / student);
         # "admin" is a MANAGE / RESULTS carousel.
         self._layout_mode = None
@@ -266,16 +275,21 @@ class QuizScreen(MDScreen):
 
     def sign_out(self):
         self._auth.sign_out()
+        self._cancel_q_timers()
         self._answers = {}
         self._problems = []
         self._my_results = []
         self._pending_ids = []
+        self._expired = set()
+        self._submitting = False
         self._refresh_account()
         self._render_signin()
 
     # ---------------------------- quiz ----------------------------
     def _load_problems(self):
         self._set_status("Loading…")
+        self._cancel_q_timers()
+        self._expired = set()
         if self._layout_mode is None:
             self._set_plain_layout()
         self._body.clear_widgets()
@@ -315,6 +329,10 @@ class QuizScreen(MDScreen):
         else:
             self._set_plain_layout()
 
+        self._cancel_q_timers()
+        self._expired = set()
+        self._submitting = False
+
         body = self._body
         body.clear_widgets()
         self._set_status("")
@@ -333,9 +351,11 @@ class QuizScreen(MDScreen):
         for idx, problem in enumerate(self._problems, 1):
             pid = str(problem.get("id"))
             state = answered.get(pid)
-            body.add_widget(self._question_card(idx, problem, state))
+            card = self._question_card(idx, problem, state)
+            body.add_widget(card)
             if state is None:
                 self._pending_ids.append(pid)
+                self._start_q_timer(pid, card)
 
         if self._pending_ids:
             submit = MDRaisedButton(
@@ -367,6 +387,17 @@ class QuizScreen(MDScreen):
             )
         )
         pid = str(problem.get("id"))
+        card._pid = pid
+        card._timer_label = None
+        if state is None:
+            card._timer_label = _label(
+                self._timer_text(ANSWER_SECONDS),
+                text_color=GOLD,
+                bold=True,
+                font_style="Caption",
+                halign="right",
+            )
+            card.add_widget(card._timer_label)
         options = problem.get("options", {}) or {}
         card._option_buttons = []
         for key in ("A", "B", "C", "D"):
@@ -400,23 +431,83 @@ class QuizScreen(MDScreen):
         return card
 
     def _choose(self, pid, chosen_row, card):
+        if pid in self._expired:
+            return
         self._answers[pid] = chosen_row._key
         for row in card._option_buttons:
             row.set_selected(row._key == chosen_row._key)
 
+    # ---------------------- per-question timer ----------------------
+    def _timer_text(self, seconds):
+        return f"{max(seconds, 0)}s to answer"
+
+    def _start_q_timer(self, pid, card):
+        card._seconds_left = ANSWER_SECONDS
+        ev = Clock.schedule_interval(
+            lambda dt, p=pid, c=card: self._tick_q_timer(p, c), 1
+        )
+        self._q_timers.append(ev)
+
+    def _tick_q_timer(self, pid, card):
+        if pid in self._expired or self._submitting:
+            return False
+        card._seconds_left -= 1
+        left = card._seconds_left
+        if card._timer_label is not None:
+            card._timer_label.text = self._timer_text(left)
+            card._timer_label.text_color = (
+                (0.9, 0.35, 0.35, 1) if left <= 5 else GOLD
+            )
+        if left <= 0:
+            self._expire_question(pid, card)
+            return False
+        return True
+
+    def _expire_question(self, pid, card):
+        if pid in self._expired:
+            return
+        self._expired.add(pid)
+        for row in card._option_buttons:
+            row.disabled = True
+        if pid not in self._answers:
+            self._answers[pid] = "-"      # no-answer -> scored wrong
+        if card._timer_label is not None:
+            card._timer_label.text = "Time's up"
+            card._timer_label.text_color = (0.9, 0.35, 0.35, 1)
+        # Once every pending question's window has closed, send them all.
+        if not self._submitting and set(self._pending_ids) <= self._expired:
+            self._submit()
+
+    def _cancel_q_timers(self):
+        for ev in self._q_timers:
+            ev.cancel()
+        self._q_timers = []
+
     def _submit(self):
-        missing = [p for p in self._pending_ids if p not in self._answers]
-        if missing:
+        if self._submitting:
+            return
+        # A question is "resolved" once it's answered or its window closed.
+        unresolved = [
+            p for p in self._pending_ids
+            if p not in self._answers and p not in self._expired
+        ]
+        if unresolved:
             self._set_status(
-                f"Answer the {len(self._pending_ids)} new question(s) first."
+                f"{len(unresolved)} question(s) still open — answer them "
+                f"or let the timer run out."
             )
             return
-        # Only send the newly-answered ones; locked questions are untouched.
-        payload = {pid: self._answers[pid] for pid in self._pending_ids}
+        self._submitting = True
+        self._cancel_q_timers()
+        # Anything still unanswered here timed out -> send "-" (wrong).
+        payload = {
+            pid: self._answers.get(pid, "-") for pid in self._pending_ids
+        }
         self._set_status("Submitting…")
         self._api.submit_answers(payload, self._on_submitted)
 
     def _on_submitted(self, data, error):
+        self._submitting = False
         if error:
             self._set_status(error)
             return
