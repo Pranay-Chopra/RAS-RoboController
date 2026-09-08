@@ -2,4 +2,6 @@
 .venv
 __pycache__
 .android_venv
+.android-venv
+.claude
 bin
