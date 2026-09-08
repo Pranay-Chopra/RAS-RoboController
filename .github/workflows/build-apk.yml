@@ -1,0 +1,52 @@
+name: Build APK
+
+on:
+  push:
+    tags: ['v*']          # e.g. `git tag v1.0.0 && git push origin v1.0.0`
+  workflow_dispatch:        # manual "Run workflow" button (artifact only)
+
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write          # needed to create / update the Release
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The Android SDK/NDK + python-for-android build tree is ~1.5 GB.
+      # Cache it so only the first run (or a buildozer.spec change) pays
+      # the full download + compile.
+      - name: Cache Buildozer state
+        uses: actions/cache@v4
+        with:
+          path: .buildozer
+          key: buildozer-${{ hashFiles('buildozer.spec') }}
+          restore-keys: buildozer-
+
+      - name: Build debug APK
+        uses: ArtemSBulgakov/buildozer-action@v1
+        with:
+          command: buildozer android debug
+          buildozer_version: stable
+
+      # Always available from the run's "Artifacts" section, tag or not.
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: robocontroller-apk
+          path: bin/*.apk
+          if-no-files-found: error
+
+      # Only when triggered by a version tag: publish under Releases.
+      - name: Attach APK to the GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: bin/*.apk
+          fail_on_unmatched_files: true
+          generate_release_notes: true
